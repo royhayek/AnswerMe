@@ -1,5 +1,6 @@
 import 'package:provider/provider.dart';
 import 'package:zapytaj/models/question.dart';
+import 'package:zapytaj/providers/app_provider.dart';
 import 'package:zapytaj/providers/auth_provider.dart';
 import 'package:zapytaj/screens/other/postDetail.dart';
 import 'package:zapytaj/config/size_config.dart';
@@ -13,25 +14,62 @@ import 'package:zapytaj/widgets/vote_buttons.dart';
 
 class PostListItem extends StatefulWidget {
   final Question question;
+  final Function addToFav;
+  final Function removeFromFav;
 
-  const PostListItem({Key key, this.question}) : super(key: key);
+  const PostListItem(
+      {Key key, this.question, this.addToFav, this.removeFromFav})
+      : super(key: key);
 
   @override
   _PostListItemState createState() => _PostListItemState();
 }
 
 class _PostListItemState extends State<PostListItem> {
-  // bool _isFavorite = false;
+  bool _isFavorite = false;
+  AuthProvider _authProvider;
 
   _navigateToPostDetail(BuildContext context, {bool answer = false}) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (ctx) => PostDetailScreen(
-            question: widget.question, answerBtnEnabled: answer),
+          question: widget.question,
+          answerBtnEnabled: answer,
+        ),
       ),
     );
   }
+
+  _checkIfIsFavorite() {
+    ApiRepository.checkIfIsFavorite(
+      context,
+      userId: _authProvider.user != null ? _authProvider.user.id : 0,
+      questionId: widget.question.id,
+    ).then((favorite) {
+      if (mounted)
+        setState(() {
+          _isFavorite = favorite;
+        });
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    if (widget.question.favorite == 1)
+      _isFavorite = true;
+    else
+      _isFavorite = false;
+  }
+
+  // @override
+  // void didChangeDependencies() {
+  //   super.didChangeDependencies();
+  //   _checkIfIsFavorite();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -61,13 +99,16 @@ class _PostListItemState extends State<PostListItem> {
                       type: Type.author, author: widget.question.author),
                 ),
                 VoteButtons(
-                    votes: widget.question.votes,
-                    questionId: widget.question.id),
+                  votes: widget.question.votes,
+                  questionId: widget.question.id,
+                  type: VoteType.question,
+                ),
               ],
             ),
           ),
 
           SizedBox(height: SizeConfig.blockSizeVertical * 2),
+          _buildFeaturedImage(context),
           _buildPostTitle(context),
           SizedBox(height: SizeConfig.blockSizeVertical * 2),
           // _buildQuestionPoll(context),
@@ -83,6 +124,27 @@ class _PostListItemState extends State<PostListItem> {
     );
   }
 
+  _buildFeaturedImage(BuildContext context) {
+    return widget.question.featuredImage != null
+        ? Column(
+            children: [
+              GestureDetector(
+                onTap: () => _navigateToPostDetail(context),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: SizeConfig.blockSizeVertical * 30,
+                  child: Image.network(
+                    '${ApiRepository.FEATURED_IMAGES_PATH}${widget.question.featuredImage}',
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              SizedBox(height: SizeConfig.blockSizeVertical),
+            ],
+          )
+        : Container();
+  }
+
   _buildCategoryAndDate(AuthProvider auth) {
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -90,14 +152,22 @@ class _PostListItemState extends State<PostListItem> {
       ),
       child: Row(
         children: [
-          Text(
-            widget.question.category.name,
-            style: TextStyle(fontSize: SizeConfig.safeBlockHorizontal * 3.4),
-          ),
-          Text(
-            ' - ',
-            style: TextStyle(fontSize: SizeConfig.safeBlockHorizontal * 3.4),
-          ),
+          widget.question.category != null
+              ? Row(
+                  children: [
+                    Text(
+                      widget.question.category.name,
+                      style: TextStyle(
+                          fontSize: SizeConfig.safeBlockHorizontal * 3.4),
+                    ),
+                    Text(
+                      ' - ',
+                      style: TextStyle(
+                          fontSize: SizeConfig.safeBlockHorizontal * 3.4),
+                    ),
+                  ],
+                )
+              : Container(),
           Text(
             'Asked at ${formatDate(widget.question.createdAt)}',
             style: TextStyle(
@@ -251,20 +321,36 @@ class _PostListItemState extends State<PostListItem> {
                   ),
                 ),
                 SizedBox(width: SizeConfig.blockSizeHorizontal * 2.5),
-                GestureDetector(
-                  onTap: () async {
-                    await ApiRepository.addToFavorites(
-                      context,
-                      userId: auth.user.id,
-                      questionId: widget.question.id,
-                    );
-                  },
-                  child: Icon(
-                    Icons.bookmark_border,
-                    color: Colors.black54,
-                    size: SizeConfig.blockSizeHorizontal * 6,
-                  ),
-                ),
+                _authProvider.user != null
+                    ? GestureDetector(
+                        onTap: () async {
+                          setState(() {
+                            _isFavorite = !_isFavorite;
+                          });
+                          await ApiRepository.addToFavorites(
+                            context,
+                            userId: auth.user.id,
+                            questionId: widget.question.id,
+                          ).then((value) async {
+                            if (!_isFavorite)
+                              await widget.removeFromFav(widget.question.id);
+                            else {
+                              await widget.addToFav(widget.question.id);
+                              await Provider.of<AppProvider>(context,
+                                      listen: false)
+                                  .clearFavoriteQuestions();
+                            }
+                          });
+                        },
+                        child: Icon(
+                          _isFavorite ? Icons.bookmark : Icons.bookmark_border,
+                          color: _isFavorite
+                              ? Theme.of(context).primaryColor
+                              : Colors.black54,
+                          size: SizeConfig.blockSizeHorizontal * 6,
+                        ),
+                      )
+                    : Container(),
               ],
             ),
           )

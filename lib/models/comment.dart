@@ -4,25 +4,31 @@ class Comment {
   int id;
   String type;
   int authorId;
-  int replierId;
+  int answerId;
   int questionId;
   String content;
   String date;
+  String featuredImage;
+  int votes;
   String createdAt;
   String updatedAt;
   User author;
+  List<Comment> replies;
 
   Comment({
     this.id,
     this.type,
     this.authorId,
-    this.replierId,
+    this.answerId,
     this.questionId,
     this.content,
     this.date,
+    this.votes,
+    this.featuredImage,
     this.createdAt,
     this.updatedAt,
     this.author,
+    this.replies,
   });
 
   factory Comment.fromJson(Map<String, dynamic> json) {
@@ -32,11 +38,16 @@ class Comment {
       authorId: json['author_id'],
       date: json['date'],
       content: json['content'],
-      replierId: json['replier_id'],
+      votes: json['votes'],
+      featuredImage: json['featuredImage'],
+      answerId: json['answer_id'],
       questionId: json['question_id'],
       createdAt: json['created_at'],
       updatedAt: json['updated_at'],
       author: json['user'] != null ? User.fromJson(json['user']) : null,
+      replies: json["replies"] != null
+          ? List<Comment>.from(json["replies"].map((x) => Comment.fromJson(x)))
+          : null,
     );
   }
 
@@ -46,10 +57,13 @@ class Comment {
     data['type'] = this.type;
     data['author_id'] = this.authorId;
     data['date'] = this.date;
+    data['votes'] = this.votes;
+    data['featuredImage'] = this.featuredImage;
     data['content'] = this.content;
-    data['replier_id'] = this.replierId;
+    data['answer_id'] = this.answerId;
     data['question_id'] = this.questionId;
     data['user'] = this.author;
+    data['replies'] = List<dynamic>.from(this.replies.map((x) => x.toJson()));
     return data;
   }
 }

@@ -18,6 +18,7 @@ class User {
   String cover;
   int points;
   int followers;
+  int following;
   List<User> userFollowers;
   int questions;
   int answers;
@@ -52,6 +53,7 @@ class User {
       this.cover,
       this.points,
       this.followers,
+      this.following,
       this.userFollowers,
       this.questions,
       this.answers,
@@ -86,6 +88,7 @@ class User {
     cover = json['cover'];
     points = json['points'];
     followers = json['followers'];
+    following = json['following'];
     if (json['user_followers'] != null) {
       userFollowers = new List<User>();
       json['user_followers'].forEach((v) {
@@ -127,6 +130,7 @@ class User {
     data['cover'] = this.cover;
     data['points'] = this.points;
     data['followers'] = this.followers;
+    data['following'] = this.following;
     if (this.userFollowers != null) {
       data['user_followers'] =
           this.userFollowers.map((v) => v.toJson()).toList();

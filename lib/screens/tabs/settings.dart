@@ -1,5 +1,6 @@
 import 'package:provider/provider.dart';
 import 'package:zapytaj/providers/auth_provider.dart';
+import 'package:zapytaj/screens/other/authorProfile.dart';
 import 'package:zapytaj/services/api_repository.dart';
 import 'package:zapytaj/utils/session_manager.dart';
 import 'package:zapytaj/config/app_config.dart';
@@ -43,6 +44,17 @@ class SettingsScreen extends StatelessWidget {
     await authProvider.clearUser();
   }
 
+  _navigateToAuthorProfile(BuildContext context) {
+    AuthProvider authProvider =
+        Provider.of<AuthProvider>(context, listen: false);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (ctx) => AuthorProfile(author: authProvider.user),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(
@@ -62,89 +74,91 @@ class SettingsScreen extends StatelessWidget {
 
   _body(BuildContext context) {
     return SingleChildScrollView(
-      physics: BouncingScrollPhysics(),
-      child: Padding(
-        padding: EdgeInsets.only(top: SizeConfig.blockSizeVertical * 1.6),
-        child: Column(
-          children: [
-            Container(
-              width: double.infinity,
-              color: Colors.white,
-              child: Column(
-                children: [
-                  SizedBox(height: SizeConfig.blockSizeVertical * 4),
-                  _buildUserImage(),
-                  SizedBox(height: SizeConfig.blockSizeVertical * 2),
-                  _buildUserName(),
-                  SizedBox(height: SizeConfig.blockSizeVertical * 3),
-                  _buildButtonsRow(context),
-                  SizedBox(height: SizeConfig.blockSizeVertical * 4),
-                  _buildScreenButtonsList(context),
-                ],
-              ),
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            color: Colors.white,
+            child: Column(
+              children: [
+                SizedBox(height: SizeConfig.blockSizeVertical * 4),
+                _buildUserImage(context),
+                SizedBox(height: SizeConfig.blockSizeVertical * 2),
+                _buildUserName(context),
+                SizedBox(height: SizeConfig.blockSizeVertical * 3),
+                _buildButtonsRow(context),
+                SizedBox(height: SizeConfig.blockSizeVertical * 4),
+                _buildScreenButtonsList(context),
+              ],
             ),
-            _buildBottomScreenButtonsList(context),
-          ],
-        ),
+          ),
+          _buildBottomScreenButtonsList(context),
+        ],
       ),
     );
   }
 
-  _buildUserImage() {
-    return Consumer<AuthProvider>(builder: (context, auth, child) {
-      if (auth.user == null || auth.user.avatar == null) {
-        return CircleAvatar(
-          backgroundImage: AssetImage('assets/images/user_icon.png'),
-          backgroundColor: Colors.transparent,
-          maxRadius: SizeConfig.blockSizeHorizontal * 9,
-        );
-      } else {
-        return CircleAvatar(
-          backgroundImage: NetworkImage(
-            '${ApiRepository.AVATAR_IMAGES_PATH}${auth.user.avatar}',
-          ),
-          backgroundColor: Colors.transparent,
-          maxRadius: SizeConfig.blockSizeHorizontal * 9,
-        );
-      }
-    });
+  _buildUserImage(BuildContext context) {
+    return InkWell(
+      onTap: () => _navigateToAuthorProfile(context),
+      child: Consumer<AuthProvider>(builder: (context, auth, child) {
+        if (auth.user == null || auth.user.avatar == null) {
+          return CircleAvatar(
+            backgroundImage: AssetImage('assets/images/user_icon.png'),
+            backgroundColor: Colors.transparent,
+            maxRadius: SizeConfig.blockSizeHorizontal * 9,
+          );
+        } else {
+          return CircleAvatar(
+            backgroundImage: NetworkImage(
+              '${ApiRepository.AVATAR_IMAGES_PATH}${auth.user.avatar}',
+            ),
+            backgroundColor: Colors.transparent,
+            maxRadius: SizeConfig.blockSizeHorizontal * 9,
+          );
+        }
+      }),
+    );
   }
 
-  _buildUserName() {
-    return Consumer<AuthProvider>(builder: (context, auth, child) {
-      if (auth.user == null || auth.user.displayname == null) {
-        return GestureDetector(
-          onTap: () => Navigator.pushNamedAndRemoveUntil(
-              context, LoginScreen.routeName, (route) => false),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                FluentIcons.person_20_filled,
-                size: SizeConfig.blockSizeHorizontal * 5,
-                color: Theme.of(context).primaryColor,
-              ),
-              SizedBox(width: SizeConfig.blockSizeHorizontal * 2),
-              Text(
-                'Login',
-                style: TextStyle(
-                  color: Colors.black87,
-                  fontSize: SizeConfig.safeBlockHorizontal * 4,
+  _buildUserName(BuildContext context) {
+    return InkWell(
+      onTap: () => _navigateToAuthorProfile(context),
+      child: Consumer<AuthProvider>(builder: (context, auth, child) {
+        if (auth.user == null || auth.user.displayname == null) {
+          return GestureDetector(
+            onTap: () => Navigator.pushNamedAndRemoveUntil(
+                context, LoginScreen.routeName, (route) => false),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  FluentIcons.person_20_filled,
+                  size: SizeConfig.blockSizeHorizontal * 5,
+                  color: Theme.of(context).primaryColor,
                 ),
-              ),
-            ],
-          ),
-        );
-      } else {
-        return Text(
-          auth.user.displayname,
-          style: TextStyle(
-            color: Colors.black87,
-            fontSize: SizeConfig.safeBlockHorizontal * 4.6,
-          ),
-        );
-      }
-    });
+                SizedBox(width: SizeConfig.blockSizeHorizontal * 2),
+                Text(
+                  'Login',
+                  style: TextStyle(
+                    color: Colors.black87,
+                    fontSize: SizeConfig.safeBlockHorizontal * 4,
+                  ),
+                ),
+              ],
+            ),
+          );
+        } else {
+          return Text(
+            auth.user.displayname,
+            style: TextStyle(
+              color: Colors.black87,
+              fontSize: SizeConfig.safeBlockHorizontal * 4.6,
+            ),
+          );
+        }
+      }),
+    );
   }
 
   _buildButtonsRow(BuildContext context) {
@@ -157,7 +171,7 @@ class SettingsScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     _circularButton(
-                      count: 0,
+                      count: auth.user.followers,
                       icon: FluentIcons.people_community_16_filled,
                       onPressed: () => Navigator.pushNamed(
                         context,
@@ -165,8 +179,9 @@ class SettingsScreen extends StatelessWidget {
                       ),
                     ),
                     _circularButton(
-                      count: 0,
+                      count: auth.user.questions,
                       icon: FluentIcons.clipboard_20_filled,
+                      onPressed: () => _navigateToAuthorProfile(context),
                     ),
                     _circularButton(
                       count: 2,
@@ -206,24 +221,9 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
           SettingsListItem(
-            text: 'Rate this app',
-            arrow: false,
-            onTap: () => _rateApp(),
-          ),
-          SettingsListItem(
             text: 'Share the app',
             arrow: false,
             onTap: () => _shareApp(),
-          ),
-          SettingsListItem(
-            text: 'Privacy Policy',
-            arrow: true,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (ctx) => InformationScreen(title: 'Privacy Policy'),
-              ),
-            ),
           ),
           SettingsListItem(
             text: 'FAQ',
@@ -236,13 +236,12 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
           SettingsListItem(
-            text: 'Terms and Conditions',
+            text: 'Badges & Points',
             arrow: true,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (ctx) =>
-                    InformationScreen(title: 'Terms and Conditions'),
+                builder: (ctx) => InformationScreen(title: 'Badges & Points'),
               ),
             ),
           ),
@@ -271,6 +270,33 @@ class SettingsScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (ctx) => InformationScreen(title: 'Contact Us'),
+                  ),
+                ),
+              ),
+              SettingsListItem(
+                text: 'Rate this app',
+                arrow: false,
+                onTap: () => _rateApp(),
+              ),
+              SettingsListItem(
+                text: 'Privacy Policy',
+                arrow: true,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (ctx) =>
+                        InformationScreen(title: 'Privacy Policy'),
+                  ),
+                ),
+              ),
+              SettingsListItem(
+                text: 'Terms and Conditions',
+                arrow: true,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (ctx) =>
+                        InformationScreen(title: 'Terms and Conditions'),
                   ),
                 ),
               ),

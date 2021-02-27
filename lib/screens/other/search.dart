@@ -19,7 +19,6 @@ class _SearchScreenState extends State<SearchScreen> {
   bool _startedSearching = false;
 
   _searchQuestions(String value) async {
-    print(value);
     _startedSearching = true;
     await ApiRepository.searchQuestions(context, title: value)
         .then((questions) {

@@ -3,6 +3,7 @@ import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:zapytaj/config/app_config.dart';
 import 'package:zapytaj/config/size_config.dart';
 import 'package:zapytaj/models/question.dart';
+import 'package:zapytaj/providers/app_provider.dart';
 import 'package:zapytaj/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:zapytaj/services/api_repository.dart';
@@ -18,6 +19,7 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
   RefreshController _refreshController =
       RefreshController(initialRefresh: false);
   AuthProvider authProvider;
+  AppProvider _appProvider;
   List<Question> _questions = [];
   int _page;
   bool _shouldStopRequests;
@@ -28,6 +30,7 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
   void initState() {
     super.initState();
     authProvider = Provider.of<AuthProvider>(context, listen: false);
+    _appProvider = Provider.of<AppProvider>(context, listen: false);
 
     _isLoading = true;
     _page = 1;
@@ -36,9 +39,15 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
   }
 
   _fetchData() async {
-    _shouldStopRequests = false;
-    _waitForNextRequest = false;
-    await _getQuestions();
+    if (_appProvider.favoriteQuestions.isNotEmpty) {
+      setState(() {
+        _questions = _appProvider.favoriteQuestions;
+      });
+    } else {
+      _shouldStopRequests = false;
+      _waitForNextRequest = false;
+      await _getQuestions();
+    }
     setState(() {
       _isLoading = false;
     });
@@ -51,16 +60,17 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
 
     await ApiRepository.getFavoriteQuestions(
       context,
-      userId: authProvider.user.id,
+      userId: authProvider.user != null ? authProvider.user.id : 0,
       offset: PER_PAGE,
       page: _page,
     ).then((questions) {
       setState(() {
         _page = _page + 1;
-
-        print(questions.data.length);
         _waitForNextRequest = false;
+      });
+      setState(() {
         _questions.addAll(questions.data.toList());
+        _appProvider.setFavoriteQuestions(questions.data);
       });
     });
 
@@ -91,6 +101,12 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
         _refreshController.loadComplete();
       }
     }
+  }
+
+  _revomeFromFavorite(int id) {
+    setState(() {
+      _questions.removeWhere((question) => question.id == id);
+    });
   }
 
   @override
@@ -127,7 +143,10 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
       onLoading: _onLoading,
       child: ListView.builder(
         itemCount: _questions.length,
-        itemBuilder: (ctx, i) => PostListItem(question: _questions[i]),
+        itemBuilder: (ctx, i) => PostListItem(
+          question: _questions[i],
+          removeFromFav: _revomeFromFavorite,
+        ),
       ),
     );
   }

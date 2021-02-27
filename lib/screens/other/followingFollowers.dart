@@ -10,27 +10,51 @@ import 'package:flutter/material.dart';
 class FollowingFollowersScreen extends StatefulWidget {
   static const routeName = "following_followers_screen";
 
+  final int authorId;
+  final int index;
+
+  const FollowingFollowersScreen({Key key, this.authorId, this.index = 0})
+      : super(key: key);
+
   @override
   _FollowingFollowersScreenState createState() =>
       _FollowingFollowersScreenState();
 }
 
-class _FollowingFollowersScreenState extends State<FollowingFollowersScreen> {
+class _FollowingFollowersScreenState extends State<FollowingFollowersScreen>
+    with SingleTickerProviderStateMixin {
+  TabController _tabController;
   AuthProvider authProvider;
   List<User> _following = [];
   List<User> _followers = [];
+  bool _isLoading;
+  int userId;
 
   @override
   void initState() {
     super.initState();
     authProvider = Provider.of<AuthProvider>(context, listen: false);
 
+    _tabController = new TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: widget.index,
+    );
+
+    if (widget.authorId != null)
+      userId = widget.authorId;
+    else if (authProvider.user != null)
+      userId = authProvider.user.id;
+    else
+      userId = 0;
+
+    _isLoading = true;
     _getUserFollowing();
     _getUserFollowers();
   }
 
   _getUserFollowing() async {
-    await ApiRepository.getUserFollowing(context, userId: authProvider.user.id)
+    await ApiRepository.getUserFollowing(context, userId: userId)
         .then((following) {
       setState(() {
         _following = following;
@@ -39,11 +63,15 @@ class _FollowingFollowersScreenState extends State<FollowingFollowersScreen> {
   }
 
   _getUserFollowers() async {
-    await ApiRepository.getUserFollowers(context, userId: authProvider.user.id)
+    await ApiRepository.getUserFollowers(context, userId: userId)
         .then((followers) {
       setState(() {
         _followers = followers;
       });
+    });
+
+    setState(() {
+      _isLoading = false;
     });
   }
 
@@ -51,11 +79,16 @@ class _FollowingFollowersScreenState extends State<FollowingFollowersScreen> {
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        appBar: _appBar(),
-        body: _body(),
-      ),
+      child: _isLoading
+          ? Scaffold(
+              backgroundColor: Colors.white,
+              body: Center(child: CircularProgressIndicator()),
+            )
+          : Scaffold(
+              backgroundColor: Colors.white,
+              appBar: _appBar(),
+              body: _body(),
+            ),
     );
   }
 
@@ -71,6 +104,7 @@ class _FollowingFollowersScreenState extends State<FollowingFollowersScreen> {
 
   _tabBar() {
     return TabBar(
+      controller: _tabController,
       labelColor: Colors.black87,
       unselectedLabelColor: Colors.black54,
       labelStyle: TextStyle(
@@ -89,6 +123,7 @@ class _FollowingFollowersScreenState extends State<FollowingFollowersScreen> {
 
   _body() {
     return TabBarView(
+      controller: _tabController,
       children: [
         _usersList(_followers),
         _usersList(_following),

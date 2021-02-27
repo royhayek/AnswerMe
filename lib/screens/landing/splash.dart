@@ -49,7 +49,7 @@ class _SplashScreenState extends State<SplashScreen> {
       await prefs.getUser().then(
             (user) => prefs.getPassword().then((password) {
               authProvider
-                  .loginUser(context, user.username, password)
+                  .loginUser(context, user.email, password)
                   .then((user) async {
                 if (user != null) _navigateToTabsScreen();
               });

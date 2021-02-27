@@ -1,9 +1,13 @@
+import 'package:provider/provider.dart';
 import 'package:zapytaj/config/size_config.dart';
+import 'package:zapytaj/models/question.dart';
 import 'package:zapytaj/models/user.dart';
+import 'package:zapytaj/providers/auth_provider.dart';
 import 'package:zapytaj/screens/other/authorProfile.dart';
 import 'package:zapytaj/services/api_repository.dart';
 import 'package:zapytaj/utils/utils.dart';
 import 'package:flutter/material.dart';
+import 'package:zapytaj/widgets/post_answer_list_item.dart';
 
 enum Type { author, answerer }
 
@@ -12,16 +16,31 @@ class UserInfoTile extends StatelessWidget {
   final User author;
   final int votes;
   final String answeredOn;
+  final int bestAnswer;
+  final int answerId;
+  final AnswerType answerType;
+  final Question question;
+  final Function getQuestion;
 
-  const UserInfoTile(
-      {Key key, this.type, this.author, this.votes, this.answeredOn})
-      : super(key: key);
+  const UserInfoTile({
+    Key key,
+    this.type,
+    this.author,
+    this.votes,
+    this.answeredOn,
+    this.bestAnswer,
+    this.answerId,
+    this.question,
+    this.answerType,
+    this.getQuestion,
+  }) : super(key: key);
 
   _navigateToAuthorProfile(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (ctx) => AuthorProfile(author: author)),
-    );
+    if (author.id != 0)
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (ctx) => AuthorProfile(author: author)),
+      );
   }
 
   @override
@@ -40,8 +59,8 @@ class UserInfoTile extends StatelessWidget {
             mainAxisSize: MainAxisSize.max,
             children: [
               _buildUserName(context),
-              SizedBox(height: SizeConfig.blockSizeVertical * 0.5),
-              _buildUserRole(),
+              SizedBox(height: SizeConfig.blockSizeVertical * 1),
+              _buildUserRoleAndState(context),
               type == Type.answerer
                   ? Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,27 +131,90 @@ class UserInfoTile extends StatelessWidget {
     );
   }
 
-  _buildUserRole() {
-    return author != null
-        ? Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: SizeConfig.blockSizeHorizontal * 2.4,
-              vertical: SizeConfig.blockSizeVertical * 0.9,
-            ),
-            decoration: BoxDecoration(
-              color: colorConvert(author.badge.color),
-              borderRadius: BorderRadius.circular(
-                SizeConfig.blockSizeHorizontal * 0.7,
+  _buildUserRoleAndState(BuildContext context) {
+    return author.badge != null
+        ? Row(
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: SizeConfig.blockSizeHorizontal * 2.4,
+                  vertical: SizeConfig.blockSizeVertical * 0.9,
+                ),
+                decoration: BoxDecoration(
+                  color: colorConvert(author.badge.color),
+                  borderRadius: BorderRadius.circular(
+                    SizeConfig.blockSizeHorizontal * 0.7,
+                  ),
+                ),
+                child: Text(
+                  author.badge.name,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: SizeConfig.safeBlockHorizontal * 3.3,
+                  ),
+                ),
               ),
-            ),
-            child: Text(
-              author.badge.name,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: SizeConfig.safeBlockHorizontal * 3.3,
-              ),
-            ),
+              SizedBox(width: SizeConfig.blockSizeHorizontal * 2),
+              Consumer<AuthProvider>(
+                builder: (context, auth, _) => type == Type.answerer &&
+                        answerType == AnswerType.answer &&
+                        auth.user != null &&
+                        auth.user.id == question.authorId
+                    ? bestAnswer == null
+                        ? _buildBestAnswerButton(
+                            name: 'Set as Best Answer',
+                            backgroundColor: Theme.of(context).primaryColor,
+                            textColor: Colors.white,
+                            border: Border(),
+                            onPressed: () async =>
+                                await ApiRepository.setAsBestAnswer(
+                              context,
+                              questionId: question.id,
+                              answerId: answerId,
+                            ).then((value) => getQuestion()),
+                          )
+                        : bestAnswer != null && bestAnswer == answerId
+                            ? _buildBestAnswerButton(
+                                name: 'Best Answer',
+                                backgroundColor: Colors.transparent,
+                                textColor: Theme.of(context).primaryColor,
+                                border: Border.all(
+                                  width: 1,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                                onPressed: () => null,
+                              )
+                            : Container()
+                    : Container(),
+              )
+            ],
           )
         : Container();
+  }
+
+  _buildBestAnswerButton({
+    String name,
+    Color backgroundColor,
+    Color textColor,
+    BoxBorder border,
+    Function onPressed,
+  }) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: SizeConfig.blockSizeHorizontal * 2.4,
+          vertical: SizeConfig.blockSizeVertical * 0.9,
+        ),
+        decoration: BoxDecoration(color: backgroundColor, border: border),
+        child: Text(
+          name,
+          style: TextStyle(
+            color: textColor,
+            fontSize: SizeConfig.safeBlockHorizontal * 3.3,
+          ),
+        ),
+      ),
+    );
   }
 }

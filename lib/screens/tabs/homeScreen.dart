@@ -6,7 +6,6 @@ import 'package:zapytaj/providers/auth_provider.dart';
 import 'package:zapytaj/screens/other/askQuestion.dart';
 import 'package:zapytaj/screens/other/search.dart';
 import 'package:zapytaj/services/api_repository.dart';
-import 'package:zapytaj/utils/session_manager.dart';
 import 'package:zapytaj/utils/utils.dart';
 import 'package:zapytaj/widgets/post_list_item.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
@@ -25,35 +24,53 @@ class _HomeScreenState extends State<HomeScreen>
   RefreshController _refreshController =
       RefreshController(initialRefresh: false);
   TabController _tabController;
+  int _selectedIndex = 0;
   AuthProvider authProvider;
   AppProvider appProvider;
   List<Question> _questions = [];
   int _page;
   bool _shouldStopRequests;
   bool _waitForNextRequest;
-  bool _isLoading;
+  bool _isLoading = true;
 
   final List<Tab> tabs = <Tab>[
     Tab(text: 'Recent Questions'),
     Tab(text: 'Most Answered'),
-    Tab(text: 'Bump Question'),
     Tab(text: 'Most Visited'),
     Tab(text: 'Most Voted'),
     Tab(text: 'No Answers'),
   ];
+  // Tab(text: 'Bump Question'),
 
   @override
   void initState() {
     super.initState();
-    _getUserInfo();
-    _fetchData('recentQuestions');
+    authProvider = Provider.of<AuthProvider>(context, listen: false);
+    appProvider = Provider.of<AppProvider>(context, listen: false);
 
     _tabController = new TabController(vsync: this, length: tabs.length);
-
     _tabController.addListener(() {
-      _fetchData(getEndpoint(_tabController.index));
-      print("Selected Index: " + _tabController.index.toString());
+      if (!_tabController.indexIsChanging) {
+        setState(() {
+          _selectedIndex = _tabController.index;
+        });
+        _checkIfDataExists(getEndpoint(_selectedIndex)).then((exist) async {
+          if (!exist) await _fetchData(getEndpoint(_selectedIndex));
+        });
+        print("Selected Index: " + _tabController.index.toString());
+      } else {
+        print(
+            "tab is animating. from active (getting the index) to inactive(getting the index) ");
+      }
     });
+
+    if (appProvider.recentQuestions.isNotEmpty) {
+      _questions = appProvider.recentQuestions;
+      setState(() {
+        _isLoading = false;
+      });
+    } else
+      _fetchData('recentQuestions');
   }
 
   @override
@@ -64,17 +81,71 @@ class _HomeScreenState extends State<HomeScreen>
 
   _fetchData(String endpoint) async {
     setState(() {
+      _isLoading = true;
       _questions = [];
       _page = 1;
-      _isLoading = true;
     });
+
     _shouldStopRequests = false;
     _waitForNextRequest = false;
 
     await _getQuestions(endpoint);
+
     setState(() {
       _isLoading = false;
     });
+  }
+
+  Future<bool> _checkIfDataExists(String endpoint) async {
+    switch (endpoint) {
+      case 'recentQuestions':
+        if (appProvider.recentQuestions.isNotEmpty) {
+          setState(() {
+            _questions = appProvider.recentQuestions;
+          });
+          return true;
+        } else
+          return false;
+        break;
+      case 'mostAnsweredQuestions':
+        if (appProvider.mostAnsweredQuestions.isNotEmpty) {
+          setState(() {
+            _questions = appProvider.mostAnsweredQuestions;
+          });
+          return true;
+        } else
+          return false;
+        break;
+      case 'mostVisitedQuestions':
+        if (appProvider.mostVisitedQuestions.isNotEmpty) {
+          setState(() {
+            _questions = appProvider.mostVisitedQuestions;
+          });
+          return true;
+        } else
+          return false;
+        break;
+      case 'mostVotedQuestions':
+        if (appProvider.mostVotedQuestions.isNotEmpty) {
+          setState(() {
+            _questions = appProvider.mostVotedQuestions;
+          });
+          return true;
+        } else
+          return false;
+        break;
+      case 'noAnsweredQuestions':
+        if (appProvider.noAnswersQuestions.isNotEmpty) {
+          setState(() {
+            _questions = appProvider.noAnswersQuestions;
+          });
+          return true;
+        } else
+          return false;
+        break;
+      default:
+        return false;
+    }
   }
 
   _getQuestions(String endpoint) async {
@@ -82,14 +153,33 @@ class _HomeScreenState extends State<HomeScreen>
     if (_waitForNextRequest) return;
     _waitForNextRequest = true;
     await ApiRepository.getRecentQuestions(context, endpoint,
-            offset: PER_PAGE, page: _page)
-        .then((questions) {
+            offset: PER_PAGE,
+            page: _page,
+            userId: authProvider.user != null ? authProvider.user.id : 0)
+        .then((questions) async {
       setState(() {
         _page = _page + 1;
         _waitForNextRequest = false;
-        print(questions.data);
         if (questions.data != null) _questions.addAll(questions.data.toList());
       });
+      switch (endpoint) {
+        case 'recentQuestions':
+          await appProvider.setRecentQuestions(_questions);
+          break;
+        case 'mostAnsweredQuestions':
+          await appProvider.setMostAnsweredQuestions(_questions);
+          break;
+        case 'mostVisitedQuestions':
+          await appProvider.setMostVisitedQuestions(_questions);
+          break;
+        case 'mostVotedQuestions':
+          await appProvider.setMostVotedQuestions(_questions);
+          break;
+        case 'noAnsweredQuestions':
+          await appProvider.setNoAnswersQuestions(_questions);
+          break;
+        default:
+      }
     });
 
     setState(() {});
@@ -108,9 +198,6 @@ class _HomeScreenState extends State<HomeScreen>
         await _getQuestions('recentQuestions');
         break;
       case 'Most Answered':
-        await _getQuestions('mostAnsweredQuestions');
-        break;
-      case 'Bump Question':
         await _getQuestions('mostAnsweredQuestions');
         break;
       case 'Most Visited':
@@ -141,26 +228,28 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
-  _getUserInfo() {
-    SessionManager prefs = SessionManager();
-    authProvider = Provider.of<AuthProvider>(context, listen: false);
-    prefs.getPassword().then((password) => print(password));
+  _addToFavorite(int id) {
+    setState(() {
+      _questions.singleWhere((question) => question.id == id).favorite = 1;
+    });
+  }
+
+  _removeFromFavorite(int id) {
+    setState(() {
+      _questions.singleWhere((question) => question.id == id).favorite = 0;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    print(_isLoading);
-    return DefaultTabController(
-      length: 6,
-      child: Scaffold(
-        appBar: _appBar(context),
-        body: !_isLoading
-            ? _body()
-            : Center(
-                child: CircularProgressIndicator(),
-              ),
-        floatingActionButton: _floatingActionButton(context),
-      ),
+    return Scaffold(
+      appBar: _appBar(context),
+      body: !_isLoading
+          ? _body()
+          : Center(
+              child: CircularProgressIndicator(),
+            ),
+      floatingActionButton: _floatingActionButton(context),
     );
   }
 
@@ -186,6 +275,7 @@ class _HomeScreenState extends State<HomeScreen>
       controller: _tabController,
       isScrollable: true,
       labelColor: Colors.black87,
+      indicatorWeight: 5.0,
       unselectedLabelColor: Colors.black54,
       labelStyle: TextStyle(fontSize: SizeConfig.safeBlockHorizontal * 3.3),
       tabs: tabs,
@@ -222,7 +312,11 @@ class _HomeScreenState extends State<HomeScreen>
       onLoading: () => _onLoading(getEndpoint(_tabController.index)),
       child: ListView.builder(
         itemCount: _questions.length,
-        itemBuilder: (ctx, i) => PostListItem(question: _questions[i]),
+        itemBuilder: (ctx, i) => PostListItem(
+          question: _questions[i],
+          addToFav: _addToFavorite,
+          removeFromFav: _removeFromFavorite,
+        ),
       ),
     );
   }
@@ -235,16 +329,16 @@ class _HomeScreenState extends State<HomeScreen>
       case 1:
         return 'mostAnsweredQuestions';
         break;
+      // case 2:
+      //   return 'mostAnsweredQuestions';
+      //   break;
       case 2:
-        return 'mostAnsweredQuestions';
-        break;
-      case 3:
         return 'mostVisitedQuestions';
         break;
-      case 4:
+      case 3:
         return 'mostVotedQuestions';
         break;
-      case 5:
+      case 4:
         return 'noAnsweredQuestions';
         break;
     }

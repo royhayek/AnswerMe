@@ -1,6 +1,8 @@
 import 'package:zapytaj/config/size_config.dart';
 import 'package:flutter/material.dart';
 import 'package:zapytaj/models/user.dart';
+import 'package:zapytaj/screens/other/askQuestion.dart';
+import 'package:zapytaj/screens/other/authorProfile.dart';
 import 'package:zapytaj/services/api_repository.dart';
 import 'package:zapytaj/utils/utils.dart';
 
@@ -8,6 +10,18 @@ class UserFollowTile extends StatelessWidget {
   final User user;
 
   const UserFollowTile({Key key, this.user}) : super(key: key);
+
+  _askAQuestion(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AskQuestionScreen(
+          askAuthor: true,
+          authorId: user.id,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +32,7 @@ class UserFollowTile extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         mainAxisSize: MainAxisSize.max,
         children: [
-          _buildUserImage(),
+          _buildUserImage(context),
           SizedBox(width: SizeConfig.blockSizeHorizontal * 4.5),
           Expanded(
             child: Column(
@@ -32,7 +46,7 @@ class UserFollowTile extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     _buildUserRole(),
-                    _buildFollowButton(),
+                    _buildAskButton(context),
                   ],
                 ),
                 SizedBox(height: SizeConfig.blockSizeVertical),
@@ -45,65 +59,76 @@ class UserFollowTile extends StatelessWidget {
     );
   }
 
-  _buildUserImage() {
-    return user.avatar == null
-        ? CircleAvatar(
-            backgroundImage: AssetImage('assets/images/user_icon.png'),
-            maxRadius: SizeConfig.blockSizeHorizontal * 8,
-          )
-        : CircleAvatar(
-            backgroundImage: NetworkImage(
-              '${ApiRepository.AVATAR_IMAGES_PATH}${user.avatar}',
+  _buildUserImage(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (ctx) => AuthorProfile(author: user)),
+      ),
+      child: user.avatar == null
+          ? CircleAvatar(
+              backgroundImage: AssetImage('assets/images/user_icon.png'),
+              maxRadius: SizeConfig.blockSizeHorizontal * 8,
+            )
+          : CircleAvatar(
+              backgroundImage: NetworkImage(
+                '${ApiRepository.AVATAR_IMAGES_PATH}${user.avatar}',
+              ),
+              maxRadius: SizeConfig.blockSizeHorizontal * 8,
             ),
-            maxRadius: SizeConfig.blockSizeHorizontal * 8,
-          );
+    );
   }
 
   _buildUserName(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.max,
-      children: [
-        Text(
-          user.displayname,
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: SizeConfig.safeBlockHorizontal * 4.1,
-            fontWeight: FontWeight.normal,
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (ctx) => AuthorProfile(author: user)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          Text(
+            user.displayname,
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: SizeConfig.safeBlockHorizontal * 4.1,
+              fontWeight: FontWeight.normal,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   _buildUserRole() {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: SizeConfig.blockSizeHorizontal * 2.4,
-        vertical: SizeConfig.blockSizeVertical * 0.9,
-      ),
-      decoration: BoxDecoration(
-        color: colorConvert(user.badge.color),
-        borderRadius: BorderRadius.circular(
-          SizeConfig.blockSizeHorizontal * 0.7,
-        ),
-      ),
-      child: Text(
-        user.badge.name,
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: SizeConfig.safeBlockHorizontal * 3.3,
-        ),
-      ),
-    );
+    return user.badge != null
+        ? Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: SizeConfig.blockSizeHorizontal * 2.4,
+              vertical: SizeConfig.blockSizeVertical * 0.9,
+            ),
+            decoration: BoxDecoration(
+              color: colorConvert(user.badge.color),
+              borderRadius: BorderRadius.circular(
+                SizeConfig.blockSizeHorizontal * 0.7,
+              ),
+            ),
+            child: Text(
+              user.badge.name,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: SizeConfig.safeBlockHorizontal * 3.3,
+              ),
+            ),
+          )
+        : Container();
   }
 
-  _buildFollowButton() {
-    return _followButton();
-  }
-
-  _followButton() {
+  _buildAskButton(BuildContext context) {
     return InkWell(
+      onTap: () => _askAQuestion(context),
       child: Container(
         height: SizeConfig.blockSizeVertical * 3.5,
         decoration: BoxDecoration(

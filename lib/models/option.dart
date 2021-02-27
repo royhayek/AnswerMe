@@ -3,6 +3,7 @@ class Option {
   int questionId;
   String option;
   String image;
+  int votes;
   String createdAt;
   String updatedAt;
 
@@ -11,6 +12,7 @@ class Option {
     this.questionId,
     this.option,
     this.image,
+    this.votes,
     this.createdAt,
     this.updatedAt,
   });
@@ -21,6 +23,7 @@ class Option {
       questionId: json['question_id'],
       option: json['option'],
       image: json['image'],
+      votes: json['votes'],
       createdAt: json['created_at'],
       updatedAt: json['updated_at'],
     );
@@ -31,6 +34,7 @@ class Option {
     data['id'] = this.id;
     data['question_id'] = this.questionId;
     data['option'] = this.option;
+    data['votes'] = this.votes;
     data['created_at'] = this.createdAt;
     data['updated_at'] = this.updatedAt;
     return data;

@@ -1,3 +1,4 @@
+import 'package:zapytaj/services/api_repository.dart';
 import 'package:zapytaj/widgets/appbar_leading_button.dart';
 import 'package:zapytaj/widgets/custom_text_field.dart';
 import 'package:zapytaj/widgets/default_button.dart';
@@ -12,7 +13,16 @@ class ForgotPasswordScreen extends StatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+  final _formKey = GlobalKey<FormState>();
+
   TextEditingController _emailController = TextEditingController();
+
+  _resetPassword() async {
+    FocusScope.of(context).unfocus();
+    if (_formKey.currentState.validate()) {
+      await ApiRepository.forgotPassword(context, _emailController.text);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,17 +41,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   _body(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        SizedBox(height: SizeConfig.blockSizeVertical * 20),
-        _buildAppLogo(),
-        SizedBox(height: SizeConfig.blockSizeVertical * 3),
-        _buildTitleAndSubtitle(),
-        _buildInformationFields(),
-        SizedBox(height: SizeConfig.blockSizeVertical * 4),
-        _buildRegisterButton(),
-      ],
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(height: SizeConfig.blockSizeVertical * 20),
+          _buildAppLogo(),
+          SizedBox(height: SizeConfig.blockSizeVertical * 3),
+          _buildTitleAndSubtitle(),
+          _buildInformationFields(),
+          SizedBox(height: SizeConfig.blockSizeVertical * 4),
+          _buildRegisterButton(),
+        ],
+      ),
     );
   }
 
@@ -80,15 +92,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       padding: EdgeInsets.symmetric(
         horizontal: SizeConfig.blockSizeHorizontal * 6,
       ),
-      child: Column(
-        children: [
-          CustomTextField(label: 'Email', controller: _emailController),
-        ],
+      child: Form(
+        key: _formKey,
+        child: CustomTextField(label: 'Email', controller: _emailController),
       ),
     );
   }
 
   _buildRegisterButton() {
-    return DefaultButton(text: 'Reset Password');
+    return DefaultButton(text: 'Reset Password', onPressed: _resetPassword);
   }
 }

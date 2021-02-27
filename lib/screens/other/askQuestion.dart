@@ -6,6 +6,7 @@ import 'package:toast/toast.dart';
 import 'package:zapytaj/models/question.dart';
 import 'package:zapytaj/providers/app_provider.dart';
 import 'package:zapytaj/providers/auth_provider.dart';
+import 'package:zapytaj/screens/other/information.dart';
 import 'package:zapytaj/services/api_repository.dart';
 import 'package:zapytaj/widgets/checkbox_list_tile.dart';
 import 'package:zapytaj/widgets/dynamic_image_question_field.dart';
@@ -21,8 +22,10 @@ import 'package:zapytaj/widgets/featured_image_picker.dart';
 
 class AskQuestionScreen extends StatefulWidget {
   final bool askAuthor;
+  final int authorId;
 
-  const AskQuestionScreen({Key key, this.askAuthor = false}) : super(key: key);
+  const AskQuestionScreen({Key key, this.askAuthor = false, this.authorId})
+      : super(key: key);
 
   @override
   _AskQuestionScreenState createState() => _AskQuestionScreenState();
@@ -87,7 +90,6 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
     _listOfQuestions.forEach((question) {
       _options.add(question.controller.text);
     });
-    print(_options);
   }
 
   _addDynamicImageQuestion() {
@@ -108,7 +110,6 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
       setState(() {
         _imageOptions.insert(index, Option(id: index, image: image));
       });
-    print(_imageOptions);
   }
 
   _removeDynamicImageQuestion(index) {
@@ -130,63 +131,81 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     if (appProvider.categories != null)
       await appProvider.getCategories(context);
-    print(appProvider.categories);
     appProvider.categories.forEach((category) {
       setState(() {
-        print('here');
         categories.add(ChoiceCategory(id: category.id, name: category.name));
-        print(categories);
       });
     });
   }
 
   _addQuestion() async {
     if (_formKey.currentState.validate()) {
-      if (_selectedCategoryId == null) {
-        Toast.show('Please check one category', context);
-        return;
-      }
-
       if (!agreeOnTerms) {
         Toast.show('Please check terms and privacy policy', context);
         return;
       }
 
-      _getDynamicImageQuestions();
-      _getDynamicQuestions();
-      print('we are here');
-
-      print('polled? $isPoll');
-
       String title = _titleController.text;
       String details = _detailsController.text;
       String videoURL = _videoURLController.text;
 
-      String _imageName;
-      if (_featuredImage != null)
-        _imageName = _featuredImage.path.split('/').last;
-      print(_imageName);
+      if (widget.askAuthor) {
+        Question _question = new Question();
+        _question.authorId = isAnonymous
+            ? 0
+            : authProvider.user != null
+                ? authProvider.user.id
+                : 0;
+        _question.title = title;
+        _question.content = details;
+        _question.createdAt = DateTime.now().toString();
+        _question.videoURL = '';
+        _question.asking = widget.authorId;
 
-      Question _question = new Question();
-      _question.authorId = isAnonymous ? 0 : authProvider.user.id;
-      _question.title = title;
-      _question.content = details;
-      _question.categoryId = _selectedCategoryId;
-      _question.polled = isPoll ? 1 : 0;
-      _question.pollTitle = title;
-      _question.imagePolled = isImagePoll ? 1 : 0;
-      _question.createdAt = DateTime.now().toString();
-      _question.videoURL = videoURL;
+        await ApiRepository.addQuestion(
+          context,
+          question: _question,
+          options: [],
+          imageOptions: [],
+        );
+      } else {
+        if (_selectedCategoryId == null) {
+          Toast.show('Please check one category', context);
+          return;
+        }
 
-      await ApiRepository.addQuestion(
-        context,
-        _question,
-        _selectedTags,
-        _options,
-        _featuredImage,
-        _imageName,
-        _imageOptions,
-      );
+        _getDynamicImageQuestions();
+        _getDynamicQuestions();
+
+        String _imageName;
+        if (_featuredImage != null)
+          _imageName = _featuredImage.path.split('/').last;
+
+        Question _question = new Question();
+        _question.authorId = isAnonymous
+            ? 0
+            : authProvider.user != null
+                ? authProvider.user.id
+                : 0;
+        _question.title = title;
+        _question.content = details;
+        _question.categoryId = _selectedCategoryId;
+        _question.polled = isPoll ? 1 : 0;
+        _question.pollTitle = title;
+        _question.imagePolled = isImagePoll ? 1 : 0;
+        _question.createdAt = DateTime.now().toString();
+        _question.videoURL = videoURL;
+
+        await ApiRepository.addQuestion(
+          context,
+          question: _question,
+          tags: _selectedTags,
+          options: _options,
+          featuredImage: _featuredImage,
+          featuredImageName: _imageName,
+          imageOptions: _imageOptions,
+        );
+      }
     }
   }
 
@@ -200,6 +219,13 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
         print('No image selected.');
       }
     });
+  }
+
+  _navigateToInformationScreen(String title) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => InformationScreen(title: title)),
+    );
   }
 
   @override
@@ -433,7 +459,6 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
         ),
         onTag: (tag) {
           if (!_selectedTags.contains(tag)) _selectedTags.add(tag);
-          print(_selectedTags);
         },
         onDelete: (tag) {
           _selectedTags.remove(tag);
@@ -609,10 +634,7 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
                     title: 'Video URL *',
                     body: Column(
                       children: [
-                        CustomTextField(
-                          label: 'Video Url',
-                          controller: _videoURLController,
-                        ),
+                        CustomTextField(controller: _videoURLController),
                         SizedBox(height: SizeConfig.blockSizeVertical * 1),
                       ],
                     ),
@@ -641,8 +663,24 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
           ),
           CheckBoxListTile(
             last: true,
-            title:
-                'By asking your question, you agreed to the Terms of Service and Privacy Policy *',
+            content: Wrap(
+              children: [
+                _buildWrappedText(
+                  'By asking your question, you agreed to the',
+                  false,
+                ),
+                GestureDetector(
+                  onTap: () =>
+                      _navigateToInformationScreen('Terms and Conditions'),
+                  child: _buildWrappedText('Terms of Service', true),
+                ),
+                _buildWrappedText(' and ', false),
+                GestureDetector(
+                  onTap: () => _navigateToInformationScreen('Privacy Policy'),
+                  child: _buildWrappedText('Privacy Policy.*', true),
+                ),
+              ],
+            ),
             value: agreeOnTerms,
             onPressed: (value) {
               setState(() {
@@ -662,6 +700,23 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
     return DefaultButton(
       text: 'Publish Your Question',
       onPressed: () => _addQuestion(),
+    );
+  }
+
+  _buildWrappedText(String text, bool hyperlink) {
+    return Text(
+      text,
+      style: hyperlink
+          ? TextStyle(
+              fontSize: SizeConfig.safeBlockHorizontal * 3.5,
+              fontWeight: FontWeight.w400,
+              color: Theme.of(context).primaryColor,
+            )
+          : TextStyle(
+              fontSize: SizeConfig.safeBlockHorizontal * 3.5,
+              fontWeight: FontWeight.w400,
+              color: Colors.black.withOpacity(0.7),
+            ),
     );
   }
 }

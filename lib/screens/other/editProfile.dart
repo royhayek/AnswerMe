@@ -312,7 +312,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   _buildBioField() {
     return CustomTextField(
       label: 'Bio',
-      maxLines: 3,
+      maxLines: 4,
       labelSize: SizeConfig.safeBlockHorizontal * 4.5,
       controller: _bioController,
     );

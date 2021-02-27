@@ -5,8 +5,15 @@ import 'package:zapytaj/models/question.dart';
 class PostPollListItem extends StatelessWidget {
   final Question question;
   final int index;
+  final bool selected;
+  final Function onOptionSelected;
 
-  const PostPollListItem({Key key, this.question, this.index})
+  const PostPollListItem(
+      {Key key,
+      this.question,
+      this.index,
+      this.selected,
+      this.onOptionSelected})
       : super(key: key);
 
   @override
@@ -14,8 +21,8 @@ class PostPollListItem extends StatelessWidget {
     return SizedBox(
       height: SizeConfig.blockSizeVertical * 6,
       child: CheckboxListTile(
-        value: false,
-        onChanged: (value) => null,
+        value: selected,
+        onChanged: (value) => onOptionSelected(question.options[index].id),
         controlAffinity: ListTileControlAffinity.leading,
         title: Text(
           question.options[index].option,

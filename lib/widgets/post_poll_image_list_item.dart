@@ -6,8 +6,15 @@ import 'package:zapytaj/services/api_repository.dart';
 class PostPollImageListItem extends StatelessWidget {
   final Question question;
   final int index;
+  final bool selected;
+  final Function onOptionSelected;
 
-  const PostPollImageListItem({Key key, this.question, this.index})
+  const PostPollImageListItem(
+      {Key key,
+      this.question,
+      this.index,
+      this.selected,
+      this.onOptionSelected})
       : super(key: key);
 
   @override
@@ -31,9 +38,9 @@ class PostPollImageListItem extends StatelessWidget {
             fit: BoxFit.fill,
           ),
           CheckboxListTile(
-            value: false,
+            value: selected,
             dense: true,
-            onChanged: (value) => null,
+            onChanged: (value) => onOptionSelected(question.options[index].id),
             controlAffinity: ListTileControlAffinity.leading,
             title: Text(
               question.options[index].option,

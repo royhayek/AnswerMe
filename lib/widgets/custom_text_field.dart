@@ -38,6 +38,7 @@ class CustomTextField extends StatelessWidget {
                   ),
                 )
               : Container(),
+          SizedBox(height: SizeConfig.blockSizeVertical * 0.5),
           TextFormField(
             obscureText: obscure,
             controller: controller,
@@ -51,6 +52,12 @@ class CustomTextField extends StatelessWidget {
               floatingLabelBehavior: FloatingLabelBehavior.always,
               fillColor: Colors.grey.shade100,
               filled: true,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: SizeConfig.blockSizeHorizontal * 2,
+                vertical: SizeConfig.blockSizeVertical * 1.5,
+              ),
+              alignLabelWithHint: false,
+              isDense: true,
               labelStyle: TextStyle(
                 fontSize: labelSize != null
                     ? labelSize
@@ -63,17 +70,20 @@ class CustomTextField extends StatelessWidget {
               ),
               enabledBorder: UnderlineInputBorder(
                 borderSide: BorderSide(color: Colors.grey.shade200),
+                borderRadius: BorderRadius.circular(5),
               ),
               focusedBorder: UnderlineInputBorder(
                 borderSide: BorderSide(color: Colors.transparent),
+                borderRadius: BorderRadius.circular(5),
               ),
               border: UnderlineInputBorder(
                 borderSide: BorderSide(color: Colors.grey.shade200),
+                borderRadius: BorderRadius.circular(5),
               ),
             ),
             validator: (value) {
               if (value.isEmpty) {
-                return '$hint must not be empty';
+                return '${hint != null ? hint : label} must not be empty';
               }
               return null;
             },

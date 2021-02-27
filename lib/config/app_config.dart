@@ -1,5 +1,5 @@
 // Host URL (Replace it with your host)
-const String URL = 'http://192.168.1.103:8000';
+const String URL = 'http://192.168.1.121:8000';
 
 const String APP_NAME = 'Zapytaj';
 

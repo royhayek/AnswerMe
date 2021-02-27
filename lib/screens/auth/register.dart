@@ -16,29 +16,34 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final _formKey = GlobalKey<FormState>();
+
   TextEditingController _emailController = TextEditingController();
   TextEditingController _usernameController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
   bool _agree = false;
 
   _registerUser() async {
-    String _email = _emailController.value.text;
-    String _username = _usernameController.value.text;
-    String _password = _passwordController.value.text;
+    FocusScope.of(context).unfocus();
+    if (_formKey.currentState.validate()) {
+      String _email = _emailController.value.text;
+      String _username = _usernameController.value.text;
+      String _password = _passwordController.value.text;
 
-    if (_agree) {
-      await ApiRepository.registerUser(context, _username, _email, _password)
-          .then((user) {
-        if (user != null) {
-          Navigator.pop(context);
-        }
-      });
-    } else {
-      Toast.show(
-        'You need to agree to the Terms of Service and Privacy Policy',
-        context,
-        duration: 2,
-      );
+      if (_agree) {
+        await ApiRepository.registerUser(context, _username, _email, _password)
+            .then((user) {
+          if (user != null) {
+            Navigator.pop(context);
+          }
+        });
+      } else {
+        Toast.show(
+          'You need to agree to the Terms of Service and Privacy Policy',
+          context,
+          duration: 2,
+        );
+      }
     }
   }
 
@@ -67,18 +72,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   _body(BuildContext context) {
     return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          SizedBox(height: SizeConfig.blockSizeVertical * 10),
-          _buildAppLogo(),
-          SizedBox(height: SizeConfig.blockSizeVertical * 3),
-          _buildInformationFields(),
-          SizedBox(height: SizeConfig.blockSizeVertical * 2),
-          _buildCheckboxTile(),
-          SizedBox(height: SizeConfig.blockSizeVertical * 3),
-          _buildRegisterButton(),
-        ],
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(height: SizeConfig.blockSizeVertical * 10),
+            _buildAppLogo(),
+            SizedBox(height: SizeConfig.blockSizeVertical * 3),
+            _buildInformationFields(),
+            SizedBox(height: SizeConfig.blockSizeVertical * 2),
+            _buildCheckboxTile(),
+            SizedBox(height: SizeConfig.blockSizeVertical * 3),
+            _buildRegisterButton(),
+          ],
+        ),
       ),
     );
   }
@@ -130,43 +138,36 @@ class _RegisterScreenState extends State<RegisterScreen> {
         },
         title: Wrap(
           children: [
-            Text(
-              'By registering, you agreed to the',
-              style: TextStyle(
-                fontSize: SizeConfig.safeBlockHorizontal * 4,
-                color: Colors.black54,
-              ),
-            ),
+            _buildWrappedText('By registering, you agreed to the', false),
             GestureDetector(
               onTap: () => _navigateToInformationScreen('Terms and Conditions'),
-              child: Text(
-                'Terms of Service',
-                style: TextStyle(
-                  fontSize: SizeConfig.safeBlockHorizontal * 4,
-                  color: Theme.of(context).primaryColor,
-                ),
-              ),
+              child: _buildWrappedText('Terms of Service', true),
             ),
-            Text(
-              ' and ',
-              style: TextStyle(
-                fontSize: SizeConfig.safeBlockHorizontal * 4,
-                color: Colors.black54,
-              ),
-            ),
+            _buildWrappedText(' and ', false),
             GestureDetector(
               onTap: () => _navigateToInformationScreen('Privacy Policy'),
-              child: Text(
-                'Privacy Policy.*',
-                style: TextStyle(
-                  fontSize: SizeConfig.safeBlockHorizontal * 4,
-                  color: Theme.of(context).primaryColor,
-                ),
-              ),
+              child: _buildWrappedText('Privacy Policy.*', true),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  _buildWrappedText(String text, bool hyperlink) {
+    return Text(
+      text,
+      style: hyperlink
+          ? TextStyle(
+              fontSize: SizeConfig.safeBlockHorizontal * 3.5,
+              fontWeight: FontWeight.w400,
+              color: Theme.of(context).primaryColor,
+            )
+          : TextStyle(
+              fontSize: SizeConfig.safeBlockHorizontal * 3.5,
+              fontWeight: FontWeight.w400,
+              color: Colors.black.withOpacity(0.7),
+            ),
     );
   }
 }

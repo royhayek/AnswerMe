@@ -1,7 +1,9 @@
+import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:zapytaj/config/app_config.dart';
 import 'package:zapytaj/models/category.dart';
 import 'package:zapytaj/models/question.dart';
+import 'package:zapytaj/providers/auth_provider.dart';
 import 'package:zapytaj/services/api_repository.dart';
 import 'package:zapytaj/utils/utils.dart';
 import 'package:zapytaj/widgets/appbar_leading_button.dart';
@@ -21,6 +23,7 @@ class CategoryQuestionsScreen extends StatefulWidget {
 class _CategoryQuestionsScreenState extends State<CategoryQuestionsScreen> {
   RefreshController _refreshController =
       RefreshController(initialRefresh: false);
+  AuthProvider _authProvider;
   List<Question> _questions = [];
   int _page;
   bool _shouldStopRequests;
@@ -30,6 +33,8 @@ class _CategoryQuestionsScreenState extends State<CategoryQuestionsScreen> {
   @override
   void initState() {
     super.initState();
+    _authProvider = Provider.of<AuthProvider>(context, listen: false);
+
     _isLoading = true;
     _page = 1;
 
@@ -51,12 +56,12 @@ class _CategoryQuestionsScreenState extends State<CategoryQuestionsScreen> {
     _waitForNextRequest = true;
 
     await ApiRepository.getQuestionsByCategory(context, widget.category.id,
-            offset: PER_PAGE, page: _page)
+            offset: PER_PAGE,
+            page: _page,
+            userId: _authProvider.user != null ? _authProvider.user.id : 0)
         .then((questions) {
       setState(() {
         _page = _page + 1;
-
-        print(questions.data.length);
         _waitForNextRequest = false;
         _questions.addAll(questions.data.toList());
       });
@@ -91,6 +96,18 @@ class _CategoryQuestionsScreenState extends State<CategoryQuestionsScreen> {
     }
   }
 
+  _addToFavorite(int id) {
+    setState(() {
+      _questions.singleWhere((question) => question.id == id).favorite = 1;
+    });
+  }
+
+  _removeFromFavorite(int id) {
+    setState(() {
+      _questions.singleWhere((question) => question.id == id).favorite = 0;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -116,7 +133,11 @@ class _CategoryQuestionsScreenState extends State<CategoryQuestionsScreen> {
             onLoading: _onLoading,
             child: ListView.builder(
               itemCount: _questions.length,
-              itemBuilder: (ctx, i) => PostListItem(question: _questions[i]),
+              itemBuilder: (ctx, i) => PostListItem(
+                question: _questions[i],
+                addToFav: _addToFavorite,
+                removeFromFav: _removeFromFavorite,
+              ),
             ),
           )
         : Center(child: CircularProgressIndicator());

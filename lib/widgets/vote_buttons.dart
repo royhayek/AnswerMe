@@ -5,11 +5,17 @@ import 'package:zapytaj/services/api_repository.dart';
 
 import '../config/size_config.dart';
 
+enum VoteType { comment, question }
+
 class VoteButtons extends StatefulWidget {
   final int votes;
   final int questionId;
+  final int commentId;
+  final VoteType type;
 
-  const VoteButtons({Key key, this.votes, this.questionId}) : super(key: key);
+  const VoteButtons(
+      {Key key, this.votes, this.questionId, this.commentId, this.type})
+      : super(key: key);
 
   @override
   _VoteButtonsState createState() => _VoteButtonsState();
@@ -20,18 +26,31 @@ class _VoteButtonsState extends State<VoteButtons> {
   int _votes = 0;
 
   _getVotes() async {
-    await ApiRepository.getQuestionVotes(context, questionId: widget.questionId)
-        .then((votes) {
-      setState(() {
-        _votes = votes;
-      });
-    });
+    switch (widget.type) {
+      case VoteType.question:
+        await ApiRepository.getQuestionVotes(context,
+                questionId: widget.questionId)
+            .then((votes) {
+          setState(() {
+            _votes = votes;
+          });
+        });
+        break;
+      case VoteType.comment:
+        await ApiRepository.getCommentVotes(context,
+                commentId: widget.commentId)
+            .then((votes) {
+          setState(() {
+            _votes = votes;
+          });
+        });
+        break;
+    }
   }
 
   @override
   void initState() {
     super.initState();
-
     _votes = widget.votes;
   }
 
@@ -47,12 +66,24 @@ class _VoteButtonsState extends State<VoteButtons> {
                   setState(() {
                     _isLoading = true;
                   });
-                  await ApiRepository.voteQuestion(
-                    context,
-                    questionId: widget.questionId,
-                    userId: auth.user.id,
-                    vote: 1,
-                  );
+                  switch (widget.type) {
+                    case VoteType.comment:
+                      await ApiRepository.voteComment(
+                        context,
+                        commentId: widget.commentId,
+                        userId: auth.user.id,
+                        vote: 1,
+                      );
+                      break;
+                    case VoteType.question:
+                      await ApiRepository.voteQuestion(
+                        context,
+                        questionId: widget.questionId,
+                        userId: auth.user.id,
+                        vote: 1,
+                      );
+                      break;
+                  }
                   await _getVotes();
                   setState(() {
                     _isLoading = false;
@@ -69,12 +100,24 @@ class _VoteButtonsState extends State<VoteButtons> {
                   setState(() {
                     _isLoading = true;
                   });
-                  await ApiRepository.voteQuestion(
-                    context,
-                    questionId: widget.questionId,
-                    userId: auth.user.id,
-                    vote: -1,
-                  );
+                  switch (widget.type) {
+                    case VoteType.comment:
+                      await ApiRepository.voteComment(
+                        context,
+                        commentId: widget.commentId,
+                        userId: auth.user.id,
+                        vote: -1,
+                      );
+                      break;
+                    case VoteType.question:
+                      await ApiRepository.voteQuestion(
+                        context,
+                        questionId: widget.questionId,
+                        userId: auth.user.id,
+                        vote: -1,
+                      );
+                      break;
+                  }
                   await _getVotes();
                   setState(() {
                     _isLoading = false;

@@ -23,6 +23,7 @@ class RequestHelper {
     try {
       response = await http.post(API + endpoint, headers: headers, body: data);
 
+      print(response.body);
       if (201 == response.statusCode) {
         final parsed = json.decode(response.body);
         if (parsed['message'] != null)
@@ -38,7 +39,7 @@ class RequestHelper {
       }
     } catch (e) {
       print(e);
-      print(response.body);
+      print(response);
       return null;
     }
   }

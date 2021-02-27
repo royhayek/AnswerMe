@@ -3,6 +3,7 @@ import 'package:zapytaj/config/size_config.dart';
 
 class CheckBoxListTile extends StatelessWidget {
   final String title;
+  final Widget content;
   final bool askAuthor;
   final bool value;
   final Function onPressed;
@@ -13,6 +14,7 @@ class CheckBoxListTile extends StatelessWidget {
   const CheckBoxListTile({
     Key key,
     this.title,
+    this.content,
     this.askAuthor = false,
     this.hasPadding = true,
     this.value,
@@ -34,14 +36,16 @@ class CheckBoxListTile extends StatelessWidget {
                   ),
             value: value,
             onChanged: (value) => onPressed(value),
-            title: Text(
-              title,
-              style: TextStyle(
-                fontSize: SizeConfig.safeBlockHorizontal * 3.5,
-                fontWeight: FontWeight.w400,
-                color: Colors.black.withOpacity(0.7),
-              ),
-            ),
+            title: title != null
+                ? Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: SizeConfig.safeBlockHorizontal * 3.5,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.black.withOpacity(0.7),
+                    ),
+                  )
+                : content,
             controlAffinity: ListTileControlAffinity.leading,
           ),
           body != null ? body : Container(),

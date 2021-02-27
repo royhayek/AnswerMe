@@ -17,18 +17,24 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+
   TextEditingController _usernameController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
   AuthProvider authProvider;
   SessionManager prefs = SessionManager();
 
   _loginUser() async {
-    authProvider = Provider.of<AuthProvider>(context, listen: false);
-    String _username = _usernameController.value.text;
-    String _password = _passwordController.value.text;
+    FocusScope.of(context).unfocus();
 
-    User user = await authProvider.loginUser(context, _username, _password);
-    if (user != null) _navigateToTabsScreen();
+    if (_formKey.currentState.validate()) {
+      authProvider = Provider.of<AuthProvider>(context, listen: false);
+      String _username = _usernameController.value.text;
+      String _password = _passwordController.value.text;
+
+      User user = await authProvider.loginUser(context, _username, _password);
+      if (user != null) _navigateToTabsScreen();
+    }
   }
 
   _navigateToTabsScreen() {
@@ -95,14 +101,19 @@ class _LoginScreenState extends State<LoginScreen> {
       padding: EdgeInsets.symmetric(
         horizontal: SizeConfig.blockSizeHorizontal * 6,
       ),
-      child: Column(
-        children: [
-          CustomTextField(label: 'Username', controller: _usernameController),
-          CustomTextField(
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            CustomTextField(label: 'Username', controller: _usernameController),
+            SizedBox(height: SizeConfig.blockSizeVertical * 2),
+            CustomTextField(
               label: 'Password',
               obscure: true,
-              controller: _passwordController),
-        ],
+              controller: _passwordController,
+            ),
+          ],
+        ),
       ),
     );
   }

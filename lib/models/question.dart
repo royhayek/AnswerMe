@@ -16,9 +16,11 @@ class Question {
   String videoURL;
   int categoryId;
   int authorId;
+  int asking;
   int attachmentId;
   int views;
   int votes;
+  int bestAnswer;
   int answersCount;
   String commentStatus;
   String share;
@@ -48,9 +50,11 @@ class Question {
     this.videoURL,
     this.categoryId,
     this.authorId,
+    this.asking,
     this.attachmentId,
     this.views,
     this.votes,
+    this.bestAnswer,
     this.answersCount,
     this.commentStatus,
     this.share,
@@ -80,9 +84,11 @@ class Question {
       videoURL: json['videoURL'],
       categoryId: json['category_id'],
       authorId: json['author_id'],
+      asking: json['asking'],
       attachmentId: json['attachment_id'],
       views: json['views'],
       votes: json['votes'],
+      bestAnswer: json['bestAnswer'],
       answersCount: json['answersCount'],
       commentStatus: json['commentStatus'],
       share: json['share'],
@@ -121,9 +127,11 @@ class Question {
     data['videoURL'] = this.videoURL;
     data['category_id'] = this.categoryId;
     data['author_id'] = this.authorId;
+    data['asking'] = this.asking;
     data['attachment_id'] = this.attachmentId;
     data['views'] = this.views;
     data['votes'] = this.votes;
+    data['bestAnswer'] = this.bestAnswer;
     data['answersCount'] = this.answersCount;
     data['answers'] = this.answers;
     data['commentStatus'] = this.commentStatus;
