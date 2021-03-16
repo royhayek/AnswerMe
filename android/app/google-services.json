@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "878585841368",
+    "project_id": "zapytaj-portal",
+    "storage_bucket": "zapytaj-portal.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:878585841368:android:eaca070684521382bef9ad",
+        "android_client_info": {
+          "package_name": "com.bloopbytes.zapytaj"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "878585841368-tb2a03gmuaf3idm0bce65olsemp1neie.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCouJV90iLmaaymmeSqp5cjGSQlEE-1g4Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "878585841368-tb2a03gmuaf3idm0bce65olsemp1neie.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
