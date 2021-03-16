@@ -1,9 +1,9 @@
-import 'package:zapytaj/config/size_config.dart';
+import 'package:zapytaj/config/SizeConfig.dart';
 import 'package:flutter/material.dart';
 import 'package:zapytaj/models/user.dart';
-import 'package:zapytaj/screens/other/askQuestion.dart';
-import 'package:zapytaj/screens/other/authorProfile.dart';
-import 'package:zapytaj/services/api_repository.dart';
+import 'package:zapytaj/screens/other/AskQuestion.dart';
+import 'package:zapytaj/screens/other/UserProfile.dart';
+import 'package:zapytaj/services/ApiRepository.dart';
 import 'package:zapytaj/utils/utils.dart';
 
 class UserFollowTile extends StatelessWidget {
@@ -63,7 +63,7 @@ class UserFollowTile extends StatelessWidget {
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
-        MaterialPageRoute(builder: (ctx) => AuthorProfile(author: user)),
+        MaterialPageRoute(builder: (ctx) => UserProfile(authorId: user.id)),
       ),
       child: user.avatar == null
           ? CircleAvatar(
@@ -83,7 +83,7 @@ class UserFollowTile extends StatelessWidget {
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
-        MaterialPageRoute(builder: (ctx) => AuthorProfile(author: user)),
+        MaterialPageRoute(builder: (ctx) => UserProfile(authorId: user.id)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

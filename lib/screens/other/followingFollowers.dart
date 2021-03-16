@@ -1,10 +1,10 @@
 import 'package:provider/provider.dart';
-import 'package:zapytaj/config/size_config.dart';
+import 'package:zapytaj/config/SizeConfig.dart';
 import 'package:zapytaj/models/user.dart';
-import 'package:zapytaj/providers/auth_provider.dart';
-import 'package:zapytaj/services/api_repository.dart';
-import 'package:zapytaj/widgets/appbar_leading_button.dart';
-import 'package:zapytaj/widgets/user_follow_tile.dart';
+import 'package:zapytaj/providers/AuthProvider.dart';
+import 'package:zapytaj/services/ApiRepository.dart';
+import 'package:zapytaj/widgets/AppBarLeadingButton.dart';
+import 'package:zapytaj/widgets/UserFollowTile.dart';
 import 'package:flutter/material.dart';
 
 class FollowingFollowersScreen extends StatefulWidget {

@@ -1,20 +1,32 @@
 import 'dart:ui';
 
-import 'package:zapytaj/config/size_config.dart';
+import 'package:zapytaj/config/SizeConfig.dart';
 import 'package:flutter/material.dart';
+import 'package:zapytaj/models/Option.dart';
 
 class DynamicQuestionField extends StatelessWidget {
   final int index;
   final String label;
   final Function remove;
+  final Option option;
 
-  DynamicQuestionField({Key key, this.index, this.label, this.remove})
-      : super(key: key);
+  DynamicQuestionField({
+    Key key,
+    this.index,
+    this.label,
+    this.remove,
+    this.option,
+  }) : super(key: key);
 
-  final TextEditingController controller = new TextEditingController();
+  final TextEditingController idController = new TextEditingController();
+  final TextEditingController inputController = new TextEditingController();
 
   @override
   Widget build(BuildContext context) {
+    if (option != null) {
+      idController.text = option.id.toString();
+      inputController.text = option.option;
+    }
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: SizeConfig.blockSizeHorizontal * 6,
@@ -37,7 +49,8 @@ class DynamicQuestionField extends StatelessWidget {
                 SizedBox(
                   height: SizeConfig.blockSizeVertical * 6,
                   child: TextField(
-                    controller: controller,
+                    controller: inputController,
+                    focusNode: FocusNode(canRequestFocus: false),
                     decoration: InputDecoration(
                       fillColor: Colors.grey.shade100,
                       filled: true,

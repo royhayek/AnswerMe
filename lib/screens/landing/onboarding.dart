@@ -1,5 +1,5 @@
-import 'package:zapytaj/config/app_config.dart';
-import 'package:zapytaj/screens/auth/login.dart';
+import 'package:zapytaj/config/AppConfig.dart';
+import 'package:zapytaj/screens/auth/Login.dart';
 import 'package:flutter/material.dart';
 import 'package:minimal_onboarding/minimal_onboarding.dart';
 

@@ -1,4 +1,4 @@
-import 'package:zapytaj/models/follower.dart';
+import 'package:zapytaj/models/Follower.dart';
 
 class Category {
   int id;

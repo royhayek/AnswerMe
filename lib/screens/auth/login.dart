@@ -1,12 +1,14 @@
 import 'package:zapytaj/models/user.dart';
-import 'package:zapytaj/providers/auth_provider.dart';
-import 'package:zapytaj/screens/auth/forgotPassword.dart';
-import 'package:zapytaj/screens/auth/register.dart';
-import 'package:zapytaj/config/size_config.dart';
-import 'package:zapytaj/screens/tabsScreen.dart';
-import 'package:zapytaj/utils/session_manager.dart';
-import 'package:zapytaj/widgets/custom_text_field.dart';
-import 'package:zapytaj/widgets/default_button.dart';
+import 'package:zapytaj/providers/AuthProvider.dart';
+import 'package:zapytaj/screens/auth/ForgotPassword.dart';
+import 'package:zapytaj/screens/auth/Register.dart';
+import 'package:zapytaj/config/SizeConfig.dart';
+import 'package:zapytaj/screens/Tabs.dart';
+import 'package:zapytaj/utils/SessionManager.dart';
+import 'package:zapytaj/utils/utils.dart';
+import 'package:zapytaj/widgets/AppLogoAndText.dart';
+import 'package:zapytaj/widgets/CustomTextField.dart';
+import 'package:zapytaj/widgets/DefaultButton.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -32,13 +34,16 @@ class _LoginScreenState extends State<LoginScreen> {
       String _username = _usernameController.value.text;
       String _password = _passwordController.value.text;
 
+      showLoadingDialog(context, 'Logging in...');
       User user = await authProvider.loginUser(context, _username, _password);
+      Navigator.pop(context);
+
       if (user != null) _navigateToTabsScreen();
     }
   }
 
   _navigateToTabsScreen() {
-    Navigator.pushNamed(context, TabsScreen.routeName);
+    Navigator.pushReplacementNamed(context, TabsScreen.routeName);
   }
 
   @override
@@ -54,7 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return AppBar(
       elevation: 0,
       actions: [
-        FlatButton(
+        TextButton(
           onPressed: _navigateToTabsScreen,
           child: Text(
             'SKIP',
@@ -92,7 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return SizedBox(
       width: SizeConfig.blockSizeHorizontal * 100,
       height: SizeConfig.blockSizeVertical * 16,
-      child: Image.asset('assets/images/app_logo.jpg'),
+      child: AppLogoAndText(),
     );
   }
 
@@ -105,7 +110,10 @@ class _LoginScreenState extends State<LoginScreen> {
         key: _formKey,
         child: Column(
           children: [
-            CustomTextField(label: 'Username', controller: _usernameController),
+            CustomTextField(
+              label: 'Username',
+              controller: _usernameController,
+            ),
             SizedBox(height: SizeConfig.blockSizeVertical * 2),
             CustomTextField(
               label: 'Password',

@@ -1,14 +1,17 @@
 import 'dart:io';
 
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:toast/toast.dart';
 import 'package:zapytaj/models/user.dart';
 import 'package:provider/provider.dart';
-import 'package:zapytaj/providers/auth_provider.dart';
-import 'package:zapytaj/config/size_config.dart';
-import 'package:zapytaj/services/api_repository.dart';
-import 'package:zapytaj/widgets/custom_text_field.dart';
-import 'package:zapytaj/widgets/default_button.dart';
+import 'package:zapytaj/providers/AuthProvider.dart';
+import 'package:zapytaj/config/SizeConfig.dart';
+import 'package:zapytaj/screens/other/UserProfile.dart';
+import 'package:zapytaj/services/ApiRepository.dart';
+import 'package:zapytaj/utils/utils.dart';
+import 'package:zapytaj/widgets/CustomTextField.dart';
+import 'package:zapytaj/widgets/DefaultButton.dart';
 import 'package:flutter/material.dart';
 
 enum ImageType { avatar, cover }
@@ -31,7 +34,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   File _avatar;
   File _cover;
   final picker = ImagePicker();
-  bool _isUpdating = false;
 
   @override
   void initState() {
@@ -65,9 +67,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
     }
 
-    setState(() {
-      _isUpdating = true;
-    });
+    showLoadingDialog(context, 'Updating Profile...');
 
     String _avatarName;
     String _coverName;
@@ -91,9 +91,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       password: _passwordController.text,
     ).then((value) async {
       await _authProvider.getUserInfo(context, _user.id).then((user) {
-        setState(() {
-          _isUpdating = false;
-        });
+        Navigator.pop(context);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (ctx) => UserProfile(authorId: _user.id),
+          ),
+        );
       });
     });
   }
@@ -115,6 +119,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarBrightness: Brightness.dark,
+      statusBarIconBrightness: Brightness.light,
+    ));
     return Scaffold(
       backgroundColor: Colors.white,
       body: _body(context),
@@ -123,11 +132,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   _body(BuildContext context) {
     return SingleChildScrollView(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          _buildCoverAndAvatarImages(context),
-        ],
+      child: Center(
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                _buildCoverAndAvatarImages(context),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -247,7 +263,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   _buildCancelButton(BuildContext context) {
     return Row(
       children: [
-        FlatButton(
+        TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text(
             'Cancel',
@@ -354,7 +370,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       onPressed: () => _updateProfile(),
       text: 'Update',
       hasPadding: false,
-      loading: _isUpdating,
     );
   }
 }

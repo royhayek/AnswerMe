@@ -1,23 +1,41 @@
 import 'dart:io';
 
 import 'package:image_picker/image_picker.dart';
-import 'package:zapytaj/config/size_config.dart';
+import 'package:zapytaj/config/SizeConfig.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:zapytaj/models/Option.dart';
+import 'package:zapytaj/services/ApiRepository.dart';
 
+// ignore: must_be_immutable
 class DynamicImageQuestionField extends StatefulWidget {
   final int index;
   final String label;
   final Function remove;
   final Function add;
   final File image;
+  final Option option;
 
   DynamicImageQuestionField(
-      {Key key, this.index, this.label, this.remove, this.add, this.image})
+      {Key key,
+      this.index,
+      this.label,
+      this.remove,
+      this.add,
+      this.image,
+      this.option})
       : super(key: key);
 
+  final TextEditingController idController = new TextEditingController();
   final TextEditingController controller = new TextEditingController();
+  String optionImageString;
+  File optionimage;
+
+  set setOptionImage(File value) {
+    optionimage = value;
+    print(optionimage);
+  }
 
   @override
   _DynamicImageQuestionFieldState createState() =>
@@ -26,21 +44,30 @@ class DynamicImageQuestionField extends StatefulWidget {
 
 class _DynamicImageQuestionFieldState extends State<DynamicImageQuestionField> {
   final picker = ImagePicker();
-  File image;
 
   Future getImage() async {
     final pickedFile = await picker.getImage(source: ImageSource.gallery);
 
     setState(() {
       if (pickedFile != null) {
-        setState(() {
-          image = File(pickedFile.path);
-          widget.add(widget.index, image);
-        });
+        // setState(() {
+        widget.setOptionImage = File(pickedFile.path);
+        // widget.add(widget.index, image);
+        // });
       } else {
         print('No image selected.');
       }
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.option != null) {
+      widget.controller.text = widget.option.option;
+      widget.idController.text = widget.option.id.toString();
+      widget.optionImageString = widget.option.image;
+    }
   }
 
   @override
@@ -54,21 +81,42 @@ class _DynamicImageQuestionFieldState extends State<DynamicImageQuestionField> {
         children: [
           InkWell(
             onTap: () => getImage(),
-            child: image == null
-                ? DottedBorder(
-                    color: Colors.black54,
-                    strokeWidth: 1,
-                    borderType: BorderType.Circle,
-                    child: Container(
-                      width: SizeConfig.blockSizeHorizontal * 12,
-                      height: SizeConfig.blockSizeHorizontal * 12,
-                      child: Icon(
-                        FluentIcons.camera_add_20_regular,
-                        size: SizeConfig.blockSizeHorizontal * 4.5,
+            child: widget.optionImageString == null
+                ? widget.optionimage == null
+                    ? DottedBorder(
                         color: Colors.black54,
-                      ),
-                    ),
-                  )
+                        strokeWidth: 1,
+                        borderType: BorderType.Circle,
+                        child: Container(
+                          width: SizeConfig.blockSizeHorizontal * 12,
+                          height: SizeConfig.blockSizeHorizontal * 12,
+                          child: Icon(
+                            FluentIcons.camera_add_20_regular,
+                            size: SizeConfig.blockSizeHorizontal * 4.5,
+                            color: Colors.black54,
+                          ),
+                        ),
+                      )
+                    : DottedBorder(
+                        color: Colors.black54,
+                        strokeWidth: 1,
+                        borderType: BorderType.Circle,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(
+                              SizeConfig.blockSizeHorizontal * 10,
+                            ),
+                          ),
+                          clipBehavior: Clip.hardEdge,
+                          width: SizeConfig.blockSizeHorizontal * 12,
+                          height: SizeConfig.blockSizeHorizontal * 12,
+                          child: Image.file(
+                            widget.optionimage,
+                            width: double.infinity,
+                            fit: BoxFit.fill,
+                          ),
+                        ),
+                      )
                 : DottedBorder(
                     color: Colors.black54,
                     strokeWidth: 1,
@@ -82,8 +130,8 @@ class _DynamicImageQuestionFieldState extends State<DynamicImageQuestionField> {
                       clipBehavior: Clip.hardEdge,
                       width: SizeConfig.blockSizeHorizontal * 12,
                       height: SizeConfig.blockSizeHorizontal * 12,
-                      child: Image.file(
-                        image,
+                      child: Image.network(
+                        '${ApiRepository.OPTION_IMAGES_PATH}${widget.optionImageString}',
                         width: double.infinity,
                         fit: BoxFit.fill,
                       ),
@@ -107,6 +155,7 @@ class _DynamicImageQuestionFieldState extends State<DynamicImageQuestionField> {
                   height: SizeConfig.blockSizeVertical * 6,
                   child: TextField(
                     controller: widget.controller,
+                    focusNode: FocusNode(canRequestFocus: false),
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: Colors.grey.shade100,

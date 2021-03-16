@@ -1,4 +1,4 @@
-import 'package:zapytaj/config/size_config.dart';
+import 'package:zapytaj/config/SizeConfig.dart';
 import 'package:flutter/material.dart';
 
 class DefaultButton extends StatelessWidget {
@@ -23,8 +23,8 @@ class DefaultButton extends StatelessWidget {
       padding: EdgeInsets.symmetric(
         horizontal: hasPadding != null ? 0 : SizeConfig.blockSizeHorizontal * 6,
       ),
-      child: FlatButton(
-        color: Theme.of(context).primaryColor,
+      child: TextButton(
+        style: TextButton.styleFrom(primary: Theme.of(context).primaryColor),
         onPressed: () => onPressed(),
         child: loading
             ? SizedBox(

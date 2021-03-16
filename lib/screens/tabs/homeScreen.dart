@@ -1,18 +1,26 @@
-import 'package:pull_to_refresh/pull_to_refresh.dart';
-import 'package:zapytaj/config/app_config.dart';
-import 'package:zapytaj/models/question.dart';
-import 'package:zapytaj/providers/app_provider.dart';
-import 'package:zapytaj/providers/auth_provider.dart';
-import 'package:zapytaj/screens/other/askQuestion.dart';
-import 'package:zapytaj/screens/other/search.dart';
-import 'package:zapytaj/services/api_repository.dart';
-import 'package:zapytaj/utils/utils.dart';
-import 'package:zapytaj/widgets/post_list_item.dart';
+import 'dart:async';
+
+import 'package:admob_flutter/admob_flutter.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:toast/toast.dart';
+import 'package:zapytaj/config/AdmobConfig.dart';
+import 'package:zapytaj/config/AppConfig.dart';
+import 'package:zapytaj/models/question.dart';
+import 'package:zapytaj/providers/AppProvider.dart';
+import 'package:zapytaj/providers/AuthProvider.dart';
+import 'package:zapytaj/screens/other/AskQuestion.dart';
+import 'package:zapytaj/screens/other/UserProfile.dart';
+import 'package:zapytaj/screens/other/QuestionDetail.dart';
+import 'package:zapytaj/screens/other/Search.dart';
+import 'package:zapytaj/services/ApiRepository.dart';
+import 'package:zapytaj/utils/NotificationBloc.dart';
+import 'package:zapytaj/utils/utils.dart';
+import 'package:zapytaj/widgets/QuestionListItem.dart';
 
-import '../../config/size_config.dart';
+import '../../config/SizeConfig.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -21,6 +29,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
+  StreamSubscription<Map> _notificationSubscription;
   RefreshController _refreshController =
       RefreshController(initialRefresh: false);
   TabController _tabController;
@@ -45,6 +54,8 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
+    _notificationSubscription = NotificationsBloc.instance.notificationStream
+        .listen(_performActionOnNotification);
     authProvider = Provider.of<AuthProvider>(context, listen: false);
     appProvider = Provider.of<AppProvider>(context, listen: false);
 
@@ -66,6 +77,7 @@ class _HomeScreenState extends State<HomeScreen>
 
     if (appProvider.recentQuestions.isNotEmpty) {
       _questions = appProvider.recentQuestions;
+
       setState(() {
         _isLoading = false;
       });
@@ -75,8 +87,49 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   void dispose() {
+    _notificationSubscription.cancel();
     _tabController.dispose();
     super.dispose();
+  }
+
+  _setQuestionsInProvider(String endpoint) async {
+    switch (endpoint) {
+      case 'recentQuestions':
+        await appProvider.setRecentQuestions(_questions);
+        break;
+      case 'mostAnsweredQuestions':
+        await appProvider.setMostAnsweredQuestions(_questions);
+        break;
+      case 'mostVisitedQuestions':
+        await appProvider.setMostVisitedQuestions(_questions);
+        break;
+      case 'mostVotedQuestions':
+        await appProvider.setMostVotedQuestions(_questions);
+        break;
+      case 'noAnsweredQuestions':
+        await appProvider.setNoAnswersQuestions(_questions);
+        break;
+      default:
+    }
+  }
+
+  _performActionOnNotification(Map<String, dynamic> message) async {
+    if (message['data']['question_id'] != null)
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => QuestionDetailScreen(
+            questionId: int.parse(message['data']['question_id']),
+          ),
+        ),
+      );
+    else if (message['data']['author_id'] != null)
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => UserProfile(
+            authorId: int.parse(message['data']['author_id']),
+          ),
+        ),
+      );
   }
 
   _fetchData(String endpoint) async {
@@ -161,25 +214,8 @@ class _HomeScreenState extends State<HomeScreen>
         _page = _page + 1;
         _waitForNextRequest = false;
         if (questions.data != null) _questions.addAll(questions.data.toList());
+        _setQuestionsInProvider(endpoint);
       });
-      switch (endpoint) {
-        case 'recentQuestions':
-          await appProvider.setRecentQuestions(_questions);
-          break;
-        case 'mostAnsweredQuestions':
-          await appProvider.setMostAnsweredQuestions(_questions);
-          break;
-        case 'mostVisitedQuestions':
-          await appProvider.setMostVisitedQuestions(_questions);
-          break;
-        case 'mostVotedQuestions':
-          await appProvider.setMostVotedQuestions(_questions);
-          break;
-        case 'noAnsweredQuestions':
-          await appProvider.setNoAnswersQuestions(_questions);
-          break;
-        default:
-      }
     });
 
     setState(() {});
@@ -258,7 +294,22 @@ class _HomeScreenState extends State<HomeScreen>
       elevation: 4,
       centerTitle: false,
       leadingWidth: SizeConfig.blockSizeHorizontal * 35,
-      leading: Image.asset('assets/images/app_logo.jpg'),
+      title: Row(
+        children: [
+          Image.asset(
+            'assets/images/app_icon.jpg',
+            width: SizeConfig.blockSizeHorizontal * 13,
+          ),
+          Text(
+            APP_NAME,
+            style: TextStyle(
+              fontFamily: 'Trueno',
+              fontSize: SizeConfig.safeBlockHorizontal * 4.8,
+              color: Theme.of(context).primaryColor,
+            ),
+          ),
+        ],
+      ),
       actions: [
         IconButton(
           icon: Icon(FluentIcons.search_20_regular, color: Colors.black87),
@@ -271,14 +322,16 @@ class _HomeScreenState extends State<HomeScreen>
 
   _tabBar() {
     return TabBar(
-      // onTap: (index) async => _fetchData(getEndpoint(index)),
+      tabs: tabs,
       controller: _tabController,
       isScrollable: true,
       labelColor: Colors.black87,
       indicatorWeight: 5.0,
       unselectedLabelColor: Colors.black54,
-      labelStyle: TextStyle(fontSize: SizeConfig.safeBlockHorizontal * 3.3),
-      tabs: tabs,
+      labelStyle: TextStyle(
+        fontSize: SizeConfig.safeBlockHorizontal * 3.3,
+        fontWeight: FontWeight.w600,
+      ),
     );
   }
 
@@ -295,16 +348,31 @@ class _HomeScreenState extends State<HomeScreen>
     return FloatingActionButton(
       elevation: 0,
       child: Icon(FluentIcons.add_12_filled),
-      onPressed: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (ctx) => AskQuestionScreen(),
-        ),
-      ),
+      onPressed: () {
+        if (authProvider.user != null && authProvider.user.id != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (ctx) => AskQuestionScreen(),
+            ),
+          );
+        } else {
+          Toast.show(
+            'You have to login to ask questions',
+            context,
+            duration: 2,
+          );
+        }
+      },
     );
   }
 
   Widget _recentQuestions(String endpoint) {
+    AdmobBanner admobBanner = AdmobBanner(
+      adUnitId: AdmobConfig.bannerAdUnitId,
+      adSize: AdmobBannerSize.BANNER,
+    );
+
     return swipeToRefresh(
       context,
       refreshController: _refreshController,
@@ -312,14 +380,61 @@ class _HomeScreenState extends State<HomeScreen>
       onLoading: () => _onLoading(getEndpoint(_tabController.index)),
       child: ListView.builder(
         itemCount: _questions.length,
-        itemBuilder: (ctx, i) => PostListItem(
-          question: _questions[i],
-          addToFav: _addToFavorite,
-          removeFromFav: _removeFromFavorite,
-        ),
+        itemBuilder: (ctx, i) {
+          return Column(
+            children: [
+              i != 0 && (i == 1 || (i - 1) % 5 == 0)
+                  ? Container(
+                      width: double.infinity,
+                      color: Colors.white,
+                      alignment: Alignment.center,
+                      child: admobBanner,
+                      margin: EdgeInsets.only(
+                        bottom: SizeConfig.blockSizeVertical * 0.5,
+                      ),
+                    )
+                  : Container(),
+              QuestionListItem(
+                question: _questions[i],
+                addToFav: _addToFavorite,
+                removeFromFav: _removeFromFavorite,
+                endpoint: getEndpoint(_selectedIndex),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
+
+  // Widget _recentQuestions(String endpoint) {
+  //   return swipeToRefresh(
+  //     context,
+  //     refreshController: _refreshController,
+  //     onRefresh: () => _onRefresh(endpoint),
+  //     onLoading: () => _onLoading(getEndpoint(_tabController.index)),
+  //     child: ListView.builder(
+  //       itemCount: _questions.length + (_isAdLoaded ? 1 : 0),
+  //       itemBuilder: (ctx, i) {
+  //         if (_isAdLoaded && i == _kAdIndex) {
+  //           return Container(
+  //             child: AdWidget(ad: _ad),
+  //             width: _ad.size.width.toDouble(),
+  //             height: 72.0,
+  //             alignment: Alignment.center,
+  //           );
+  //         } else {
+  //           return PostListItem(
+  //             question: _questions[i],
+  //             addToFav: _addToFavorite,
+  //             removeFromFav: _removeFromFavorite,
+  //             endpoint: getEndpoint(_selectedIndex),
+  //           );
+  //         }
+  //       },
+  //     ),
+  //   );
+  // }
 
   String getEndpoint(int index) {
     switch (index) {

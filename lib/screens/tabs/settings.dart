@@ -1,16 +1,17 @@
 import 'package:provider/provider.dart';
-import 'package:zapytaj/providers/auth_provider.dart';
-import 'package:zapytaj/screens/other/authorProfile.dart';
-import 'package:zapytaj/services/api_repository.dart';
-import 'package:zapytaj/utils/session_manager.dart';
-import 'package:zapytaj/config/app_config.dart';
-import 'package:zapytaj/config/size_config.dart';
-import 'package:zapytaj/screens/auth/login.dart';
-import 'package:zapytaj/screens/other/editProfile.dart';
-import 'package:zapytaj/screens/other/followingFollowers.dart';
-import 'package:zapytaj/screens/other/information.dart';
-import 'package:zapytaj/screens/other/notifications.dart';
-import 'package:zapytaj/widgets/settings_list_item.dart';
+import 'package:zapytaj/providers/AuthProvider.dart';
+import 'package:zapytaj/screens/other/UserProfile.dart';
+import 'package:zapytaj/services/ApiRepository.dart';
+import 'package:zapytaj/utils/SessionManager.dart';
+import 'package:zapytaj/config/AppConfig.dart';
+import 'package:zapytaj/config/SizeConfig.dart';
+import 'package:zapytaj/screens/auth/Login.dart';
+import 'package:zapytaj/screens/other/EditProfile.dart';
+import 'package:zapytaj/screens/other/FollowingFollowers.dart';
+import 'package:zapytaj/screens/other/Information.dart';
+import 'package:zapytaj/screens/other/Notifications.dart';
+import 'package:zapytaj/utils/utils.dart';
+import 'package:zapytaj/widgets/SettingsListItem.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -31,9 +32,7 @@ class SettingsScreen extends StatelessWidget {
     }
   }
 
-  _logout(BuildContext context) async {
-    AuthProvider authProvider =
-        Provider.of<AuthProvider>(context, listen: false);
+  _logout(BuildContext context, AuthProvider auth) async {
     SessionManager pref = SessionManager();
     Navigator.pushNamedAndRemoveUntil(
       context,
@@ -41,18 +40,33 @@ class SettingsScreen extends StatelessWidget {
       (route) => false,
     );
     await pref.cleaUser();
-    await authProvider.clearUser();
+    await auth.clearUser();
+  }
+
+  _deleteAccount(BuildContext context, AuthProvider auth) async {
+    showConfirmationDialog(
+      context,
+      text: 'Are you sure you want to delete your account?',
+      yes: () async {
+        await ApiRepository.deleteAccount(context, userId: auth.user.id)
+            .then((value) {
+          _logout(context, auth);
+        });
+      },
+      no: () => Navigator.pop(context),
+    );
   }
 
   _navigateToAuthorProfile(BuildContext context) {
     AuthProvider authProvider =
         Provider.of<AuthProvider>(context, listen: false);
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (ctx) => AuthorProfile(author: authProvider.user),
-      ),
-    );
+    if (authProvider.user != null)
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (ctx) => UserProfile(authorId: authProvider.user.id),
+        ),
+      );
   }
 
   @override
@@ -184,8 +198,8 @@ class SettingsScreen extends StatelessWidget {
                       onPressed: () => _navigateToAuthorProfile(context),
                     ),
                     _circularButton(
-                      count: 2,
-                      icon: FluentIcons.alert_16_filled,
+                      count: auth.user.notifications,
+                      icon: FluentIcons.alert_20_filled,
                       onPressed: () => Navigator.pushNamed(
                         context,
                         NotificationsScreen.routeName,
@@ -255,9 +269,9 @@ class SettingsScreen extends StatelessWidget {
       builder: (context, auth, _) => Padding(
         padding: EdgeInsets.only(
           top: SizeConfig.blockSizeVertical * 1.6,
-          bottom: SizeConfig.blockSizeVertical * 1.6,
         ),
         child: Container(
+          padding: EdgeInsets.only(bottom: SizeConfig.blockSizeVertical * 2),
           color: Colors.white,
           child: ListView(
             shrinkWrap: true,
@@ -306,7 +320,15 @@ class SettingsScreen extends StatelessWidget {
                       text: 'Logout',
                       arrow: true,
                       color: Theme.of(context).primaryColor,
-                      onTap: () => _logout(context),
+                      onTap: () => _logout(context, auth),
+                    ),
+              auth.user == null || auth.user.username == null
+                  ? Container()
+                  : SettingsListItem(
+                      text: 'Delete Account',
+                      arrow: false,
+                      color: Colors.red,
+                      onTap: () => _deleteAccount(context, auth),
                     ),
             ],
           ),
@@ -321,6 +343,8 @@ class SettingsScreen extends StatelessWidget {
         horizontal: SizeConfig.blockSizeHorizontal * 4,
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           InkWell(
             child: Container(

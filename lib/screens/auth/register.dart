@@ -1,12 +1,14 @@
-import 'package:zapytaj/screens/other/information.dart';
-import 'package:zapytaj/services/api_repository.dart';
-import 'package:zapytaj/widgets/appbar_leading_button.dart';
-import 'package:zapytaj/widgets/custom_text_field.dart';
-import 'package:zapytaj/widgets/default_button.dart';
+import 'package:zapytaj/screens/other/Information.dart';
+import 'package:zapytaj/services/ApiRepository.dart';
+import 'package:zapytaj/utils/utils.dart';
+import 'package:zapytaj/widgets/AppLogoAndText.dart';
+import 'package:zapytaj/widgets/AppBarLeadingButton.dart';
+import 'package:zapytaj/widgets/CustomTextField.dart';
+import 'package:zapytaj/widgets/DefaultButton.dart';
 import 'package:flutter/material.dart';
 import 'package:toast/toast.dart';
 
-import '../../config/size_config.dart';
+import '../../config/SizeConfig.dart';
 
 class RegisterScreen extends StatefulWidget {
   static const routeName = 'register_screen';
@@ -25,14 +27,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   _registerUser() async {
     FocusScope.of(context).unfocus();
+
     if (_formKey.currentState.validate()) {
       String _email = _emailController.value.text;
       String _username = _usernameController.value.text;
       String _password = _passwordController.value.text;
 
       if (_agree) {
+        showLoadingDialog(context, 'Creating Account...');
+
         await ApiRepository.registerUser(context, _username, _email, _password)
             .then((user) {
+          Navigator.pop(context);
           if (user != null) {
             Navigator.pop(context);
           }
@@ -95,7 +101,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return SizedBox(
       width: SizeConfig.blockSizeHorizontal * 100,
       height: SizeConfig.blockSizeVertical * 16,
-      child: Image.asset('assets/images/app_logo.jpg'),
+      child: AppLogoAndText(),
     );
   }
 

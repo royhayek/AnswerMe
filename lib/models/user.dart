@@ -1,4 +1,4 @@
-import 'badge.dart';
+import 'Badge.dart';
 
 class User {
   int id;
@@ -90,7 +90,7 @@ class User {
     followers = json['followers'];
     following = json['following'];
     if (json['user_followers'] != null) {
-      userFollowers = new List<User>();
+      userFollowers = [];
       json['user_followers'].forEach((v) {
         userFollowers.add(new User.fromJson(v));
       });

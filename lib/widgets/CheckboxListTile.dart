@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:zapytaj/config/size_config.dart';
+import 'package:zapytaj/config/SizeConfig.dart';
 
 class CheckBoxListTile extends StatelessWidget {
   final String title;

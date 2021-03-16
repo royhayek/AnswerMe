@@ -1,10 +1,11 @@
-import 'package:zapytaj/services/api_repository.dart';
-import 'package:zapytaj/widgets/appbar_leading_button.dart';
-import 'package:zapytaj/widgets/custom_text_field.dart';
-import 'package:zapytaj/widgets/default_button.dart';
+import 'package:zapytaj/services/ApiRepository.dart';
+import 'package:zapytaj/widgets/AppLogoAndText.dart';
+import 'package:zapytaj/widgets/AppBarLeadingButton.dart';
+import 'package:zapytaj/widgets/CustomTextField.dart';
+import 'package:zapytaj/widgets/DefaultButton.dart';
 import 'package:flutter/material.dart';
 
-import '../../config/size_config.dart';
+import '../../config/SizeConfig.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   static const routeName = 'forgot_password_screen';
@@ -61,7 +62,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     return SizedBox(
       width: SizeConfig.blockSizeHorizontal * 100,
       height: SizeConfig.blockSizeVertical * 16,
-      child: Image.asset('assets/images/app_logo.jpg'),
+      child: AppLogoAndText(),
     );
   }
 

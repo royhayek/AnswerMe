@@ -1,13 +1,13 @@
 import 'package:provider/provider.dart';
-import 'package:zapytaj/config/size_config.dart';
+import 'package:zapytaj/config/SizeConfig.dart';
 import 'package:zapytaj/models/question.dart';
 import 'package:zapytaj/models/user.dart';
-import 'package:zapytaj/providers/auth_provider.dart';
-import 'package:zapytaj/screens/other/authorProfile.dart';
-import 'package:zapytaj/services/api_repository.dart';
+import 'package:zapytaj/providers/AuthProvider.dart';
+import 'package:zapytaj/screens/other/UserProfile.dart';
+import 'package:zapytaj/services/ApiRepository.dart';
 import 'package:zapytaj/utils/utils.dart';
 import 'package:flutter/material.dart';
-import 'package:zapytaj/widgets/post_answer_list_item.dart';
+import 'package:zapytaj/widgets/QuestionAnswerListItem.dart';
 
 enum Type { author, answerer }
 
@@ -39,7 +39,7 @@ class UserInfoTile extends StatelessWidget {
     if (author.id != 0)
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (ctx) => AuthorProfile(author: author)),
+        MaterialPageRoute(builder: (ctx) => UserProfile(authorId: author.id)),
       );
   }
 

@@ -1,13 +1,16 @@
+import 'package:admob_flutter/admob_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
-import 'package:zapytaj/config/app_config.dart';
-import 'package:zapytaj/models/category.dart';
+import 'package:zapytaj/config/AdmobConfig.dart';
+import 'package:zapytaj/config/AppConfig.dart';
+import 'package:zapytaj/config/SizeConfig.dart';
+import 'package:zapytaj/models/Category.dart';
 import 'package:zapytaj/models/question.dart';
-import 'package:zapytaj/providers/auth_provider.dart';
-import 'package:zapytaj/services/api_repository.dart';
+import 'package:zapytaj/providers/AuthProvider.dart';
+import 'package:zapytaj/services/ApiRepository.dart';
 import 'package:zapytaj/utils/utils.dart';
-import 'package:zapytaj/widgets/appbar_leading_button.dart';
-import 'package:zapytaj/widgets/post_list_item.dart';
+import 'package:zapytaj/widgets/AppBarLeadingButton.dart';
+import 'package:zapytaj/widgets/QuestionListItem.dart';
 import 'package:flutter/material.dart';
 
 class CategoryQuestionsScreen extends StatefulWidget {
@@ -125,6 +128,11 @@ class _CategoryQuestionsScreenState extends State<CategoryQuestionsScreen> {
   }
 
   _favoriteQuestions() {
+    AdmobBanner admobBanner = AdmobBanner(
+      adUnitId: AdmobConfig.bannerAdUnitId,
+      adSize: AdmobBannerSize.BANNER,
+    );
+
     return !_isLoading
         ? swipeToRefresh(
             context,
@@ -133,11 +141,28 @@ class _CategoryQuestionsScreenState extends State<CategoryQuestionsScreen> {
             onLoading: _onLoading,
             child: ListView.builder(
               itemCount: _questions.length,
-              itemBuilder: (ctx, i) => PostListItem(
-                question: _questions[i],
-                addToFav: _addToFavorite,
-                removeFromFav: _removeFromFavorite,
-              ),
+              itemBuilder: (ctx, i) {
+                return Column(
+                  children: [
+                    i != 0 && (i == 1 || (i - 1) % 5 == 0)
+                        ? Container(
+                            width: double.infinity,
+                            color: Colors.white,
+                            alignment: Alignment.center,
+                            child: admobBanner,
+                            margin: EdgeInsets.only(
+                              bottom: SizeConfig.blockSizeVertical * 0.5,
+                            ),
+                          )
+                        : Container(),
+                    QuestionListItem(
+                      question: _questions[i],
+                      addToFav: _addToFavorite,
+                      removeFromFav: _removeFromFavorite,
+                    ),
+                  ],
+                );
+              },
             ),
           )
         : Center(child: CircularProgressIndicator());

@@ -1,11 +1,11 @@
 import 'package:provider/provider.dart';
-import 'package:zapytaj/models/category.dart';
-import 'package:zapytaj/config/size_config.dart';
-import 'package:zapytaj/providers/app_provider.dart';
-import 'package:zapytaj/providers/auth_provider.dart';
-import 'package:zapytaj/screens/other/categoryQuestions.dart';
+import 'package:zapytaj/models/Category.dart';
+import 'package:zapytaj/config/SizeConfig.dart';
+import 'package:zapytaj/providers/AppProvider.dart';
+import 'package:zapytaj/providers/AuthProvider.dart';
+import 'package:zapytaj/screens/other/CategoryQuestions.dart';
 import 'package:flutter/material.dart';
-import 'package:zapytaj/services/api_repository.dart';
+import 'package:zapytaj/services/ApiRepository.dart';
 
 class CategoriesListItem extends StatefulWidget {
   final Category category;
@@ -98,9 +98,24 @@ class _CategoriesListItemState extends State<CategoriesListItem> {
                     SizedBox(
                       width: SizeConfig.blockSizeHorizontal * 20,
                       height: SizeConfig.blockSizeVertical * 4.5,
-                      child: FlatButton(
-                        color:
-                            !isFollowing ? Colors.blueGrey : Colors.transparent,
+                      child: TextButton(
+                        style: TextButton.styleFrom(
+                          primary: !isFollowing
+                              ? Colors.blueGrey
+                              : Colors.transparent,
+                          shape: !isFollowing
+                              ? RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(2),
+                                )
+                              : RoundedRectangleBorder(
+                                  side: BorderSide(
+                                    width: 1,
+                                    color: Colors.blueGrey,
+                                  ),
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                          padding: EdgeInsets.symmetric(horizontal: 0),
+                        ),
                         onPressed: () async {
                           isFollowing = !isFollowing;
                           await ApiRepository.followCategory(
@@ -112,18 +127,6 @@ class _CategoriesListItemState extends State<CategoriesListItem> {
                           await Provider.of<AppProvider>(context, listen: false)
                               .getCategories(context);
                         },
-                        shape: !isFollowing
-                            ? RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(2),
-                              )
-                            : RoundedRectangleBorder(
-                                side: BorderSide(
-                                  width: 1,
-                                  color: Colors.blueGrey,
-                                ),
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                        padding: EdgeInsets.symmetric(horizontal: 0),
                         child: !isFollowing
                             ? Text(
                                 'Follow',

@@ -1,14 +1,16 @@
+import 'package:admob_flutter/admob_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
-import 'package:zapytaj/config/app_config.dart';
-import 'package:zapytaj/config/size_config.dart';
+import 'package:zapytaj/config/AdmobConfig.dart';
+import 'package:zapytaj/config/AppConfig.dart';
+import 'package:zapytaj/config/SizeConfig.dart';
 import 'package:zapytaj/models/question.dart';
-import 'package:zapytaj/providers/app_provider.dart';
-import 'package:zapytaj/providers/auth_provider.dart';
+import 'package:zapytaj/providers/AppProvider.dart';
+import 'package:zapytaj/providers/AuthProvider.dart';
 import 'package:flutter/material.dart';
-import 'package:zapytaj/services/api_repository.dart';
+import 'package:zapytaj/services/ApiRepository.dart';
 import 'package:zapytaj/utils/utils.dart';
-import 'package:zapytaj/widgets/post_list_item.dart';
+import 'package:zapytaj/widgets/QuestionListItem.dart';
 
 class FavoriteScreen extends StatefulWidget {
   @override
@@ -136,6 +138,11 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
   }
 
   Widget _favoriteQuestions() {
+    AdmobBanner admobBanner = AdmobBanner(
+      adUnitId: AdmobConfig.bannerAdUnitId,
+      adSize: AdmobBannerSize.BANNER,
+    );
+
     return swipeToRefresh(
       context,
       refreshController: _refreshController,
@@ -143,36 +150,64 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
       onLoading: _onLoading,
       child: ListView.builder(
         itemCount: _questions.length,
-        itemBuilder: (ctx, i) => PostListItem(
-          question: _questions[i],
-          removeFromFav: _revomeFromFavorite,
-        ),
+        itemBuilder: (ctx, i) {
+          return Column(
+            children: [
+              i != 0 && (i == 1 || (i - 1) % 5 == 0)
+                  ? Container(
+                      width: double.infinity,
+                      color: Colors.white,
+                      alignment: Alignment.center,
+                      child: admobBanner,
+                      margin: EdgeInsets.only(
+                        bottom: SizeConfig.blockSizeVertical * 0.5,
+                      ),
+                    )
+                  : Container(),
+              QuestionListItem(
+                question: _questions[i],
+                removeFromFav: _revomeFromFavorite,
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
   _emptyFavoriteScreen(String text) {
-    return Container(
-      color: Colors.white,
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.bookmark_border,
-              color: Colors.grey.shade300,
-              size: SizeConfig.blockSizeHorizontal * 11,
+    return Stack(
+      children: [
+        Container(
+          color: Colors.white,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.bookmark_border,
+                  color: Colors.grey.shade300,
+                  size: SizeConfig.blockSizeHorizontal * 11,
+                ),
+                Text(
+                  text,
+                  style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: SizeConfig.safeBlockHorizontal * 3.5,
+                  ),
+                ),
+              ],
             ),
-            Text(
-              text,
-              style: TextStyle(
-                color: Colors.grey.shade400,
-                fontSize: SizeConfig.safeBlockHorizontal * 3.5,
-              ),
-            ),
-          ],
+          ),
         ),
-      ),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: AdmobBanner(
+            adUnitId: AdmobConfig.bannerAdUnitId,
+            adSize: AdmobBannerSize.BANNER,
+          ),
+        ),
+      ],
     );
   }
 }

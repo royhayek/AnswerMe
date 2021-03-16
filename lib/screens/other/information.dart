@@ -1,12 +1,12 @@
 import 'package:provider/provider.dart';
-import 'package:zapytaj/config/size_config.dart';
-import 'package:zapytaj/models/badge.dart';
-import 'package:zapytaj/models/point.dart';
-import 'package:zapytaj/providers/app_provider.dart';
-import 'package:zapytaj/services/api_repository.dart';
+import 'package:zapytaj/config/SizeConfig.dart';
+import 'package:zapytaj/models/Badge.dart';
+import 'package:zapytaj/models/Point.dart';
+import 'package:zapytaj/providers/AppProvider.dart';
+import 'package:zapytaj/services/ApiRepository.dart';
 import 'package:zapytaj/utils/utils.dart';
-import 'package:zapytaj/widgets/appbar_leading_button.dart';
-import 'package:zapytaj/widgets/custom_text_field.dart';
+import 'package:zapytaj/widgets/AppBarLeadingButton.dart';
+import 'package:zapytaj/widgets/CustomTextField.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_html/style.dart';
@@ -203,10 +203,12 @@ class _InformationScreenState extends State<InformationScreen> {
                         SizedBox(
                           width: SizeConfig.blockSizeHorizontal * 25,
                           height: SizeConfig.blockSizeVertical * 6.5,
-                          child: RaisedButton(
-                            elevation: 0,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              elevation: 0,
+                              primary: Theme.of(context).primaryColor,
+                            ),
                             onPressed: () => _sendMessage(),
-                            color: Theme.of(context).primaryColor,
                             child: Text(
                               'Send',
                               style: TextStyle(

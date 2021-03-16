@@ -31,25 +31,40 @@ dependencies:
   minimal_onboarding: ^1.0.0 # for onboarding screen
   fluentui_system_icons: ^1.1.92 # microsoft icons
   dotted_border: ^1.0.7 #for dashed or dotted borders
-  textfield_tags: ^1.1.0+1 #for tags textfields 
+  textfield_tags: ^1.1.1 #for tags textfields 
   flutter_html: ^1.2.0 # for displaying html content from backend
   share: ^0.6.5+4 # used to share the app
   launch_review: ^2.0.0 # to launch the store for review
   http: ^0.12.2 # for http requests
   toast: ^0.1.5 # to display messages
-  shared_preferences: ^0.5.12+4 # to store data locally
+  shared_preferences: ^2.0.4 # to store data locally
   provider: ^4.3.3 # to cache data
   image_picker: ^0.6.7+22 # to be able to pick images from phone
   flutter_staggered_grid_view: ^0.3.3
-  pull_to_refresh: 1.6.3
+  pull_to_refresh: ^1.6.4
   intl: ^0.16.1
   scroll_app_bar: ^1.0.3
   percent_indicator: ^2.1.9+1
   url_launcher: ^5.7.10 # to launch video urls
+  firebase_messaging: ^7.0.3 # for firebase push notifications
+  flutter_local_notifications: ^4.0.1+1 # to push notification when app is in foreground
+  ars_progress_dialog: ^0.1.2 # progress dialog used when processing data
+  scroll_to_index: ^1.0.6 # used to scroll to a list index
+  admob_flutter: ^1.0.1 # for admob ads
+  admob_consent: ^1.1.2
+  path_provider: ^2.0.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.8.0
+  chewie_audio: ^1.1.2
+  flutter_svg: ^0.19.3
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/app_icon.jpg"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

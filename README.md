@@ -1,4 +1,4 @@
-# zapytaj
+# Zapytaj
 
 A new Flutter application.
 

@@ -1,12 +1,14 @@
-import 'package:zapytaj/models/comment.dart';
-import 'package:zapytaj/models/question_tag.dart';
+import 'package:zapytaj/models/Comment.dart';
+import 'package:zapytaj/models/QuestionTag.dart';
 
-import 'category.dart';
-import 'option.dart';
+import 'Category.dart';
+import 'Option.dart';
 import 'user.dart';
 
 class Question {
   int id;
+  String username;
+  String email;
   String type;
   int status;
   String title;
@@ -22,6 +24,7 @@ class Question {
   int votes;
   int bestAnswer;
   int answersCount;
+  int userOptionsCount;
   String commentStatus;
   String share;
   int favorite;
@@ -41,6 +44,8 @@ class Question {
 
   Question({
     this.id,
+    this.username,
+    this.email,
     this.type,
     this.status,
     this.title,
@@ -56,6 +61,7 @@ class Question {
     this.votes,
     this.bestAnswer,
     this.answersCount,
+    this.userOptionsCount,
     this.commentStatus,
     this.share,
     this.favorite,
@@ -75,6 +81,8 @@ class Question {
   factory Question.fromJson(Map<String, dynamic> json) {
     return Question(
       id: json['id'],
+      username: json['username'],
+      email: json['email'],
       type: json['type'],
       status: json['status'],
       title: json['title'],
@@ -90,6 +98,7 @@ class Question {
       votes: json['votes'],
       bestAnswer: json['bestAnswer'],
       answersCount: json['answersCount'],
+      userOptionsCount: json['userOptionsCount'],
       commentStatus: json['commentStatus'],
       share: json['share'],
       favorite: json['favorite'],
@@ -133,6 +142,7 @@ class Question {
     data['votes'] = this.votes;
     data['bestAnswer'] = this.bestAnswer;
     data['answersCount'] = this.answersCount;
+    data['userOptionsCount'] = this.userOptionsCount;
     data['answers'] = this.answers;
     data['commentStatus'] = this.commentStatus;
     data['share'] = this.share;

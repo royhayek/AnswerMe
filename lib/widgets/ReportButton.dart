@@ -1,14 +1,15 @@
 import 'package:provider/provider.dart';
-import 'package:zapytaj/providers/auth_provider.dart';
-import 'package:zapytaj/services/api_repository.dart';
+import 'package:zapytaj/providers/AuthProvider.dart';
+import 'package:zapytaj/services/ApiRepository.dart';
 import 'package:zapytaj/utils/utils.dart';
-import 'package:zapytaj/widgets/custom_text_field.dart';
+import 'package:zapytaj/widgets/CustomTextField.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 
-import '../config/size_config.dart';
+import '../config/SizeConfig.dart';
 
 class ReportButton extends StatelessWidget {
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController _reportController = TextEditingController();
   final int questionId;
   final int answerId;
@@ -16,15 +17,17 @@ class ReportButton extends StatelessWidget {
   ReportButton({Key key, this.questionId, this.answerId}) : super(key: key);
 
   _submitReport(BuildContext context) async {
-    AuthProvider _auth = Provider.of<AuthProvider>(context, listen: false);
-    await ApiRepository.submitReport(
-      context,
-      userId: _auth.user.id,
-      questionId: questionId,
-      answerId: answerId,
-      content: _reportController.text,
-      type: answerId != null ? 'Answer' : 'Question',
-    ).then((value) => Navigator.of(context).pop());
+    if (_formKey.currentState.validate()) {
+      AuthProvider _auth = Provider.of<AuthProvider>(context, listen: false);
+      await ApiRepository.submitReport(
+        context,
+        userId: _auth.user != null ? _auth.user.id : 0,
+        questionId: questionId,
+        answerId: answerId,
+        content: _reportController.text,
+        type: answerId != null ? 'Answer' : 'Question',
+      ).then((value) => Navigator.of(context).pop());
+    }
   }
 
   @override
@@ -44,10 +47,13 @@ class ReportButton extends StatelessWidget {
           onTap: () => showCustomDialogWithTitle(
             context,
             title: 'Report',
-            body: CustomTextField(
-              label: 'Message',
-              labelSize: SizeConfig.safeBlockHorizontal * 4,
-              controller: _reportController,
+            body: Form(
+              key: _formKey,
+              child: CustomTextField(
+                label: 'Message',
+                labelSize: SizeConfig.safeBlockHorizontal * 4,
+                controller: _reportController,
+              ),
             ),
             onTapCancel: () => Navigator.pop(context),
             onTapSubmit: () => _submitReport(context),

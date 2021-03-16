@@ -1,4 +1,4 @@
-import 'package:zapytaj/config/size_config.dart';
+import 'package:zapytaj/config/SizeConfig.dart';
 import 'package:flutter/material.dart';
 
 class SettingsListItem extends StatelessWidget {

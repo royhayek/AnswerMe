@@ -1,9 +1,11 @@
-import 'package:zapytaj/config/size_config.dart';
+import 'package:provider/provider.dart';
+import 'package:zapytaj/config/SizeConfig.dart';
 import 'package:zapytaj/models/question.dart';
-import 'package:zapytaj/services/api_repository.dart';
-import 'package:zapytaj/widgets/appbar_leading_button.dart';
-import 'package:zapytaj/widgets/custom_text_field.dart';
-import 'package:zapytaj/widgets/post_list_item.dart';
+import 'package:zapytaj/providers/AuthProvider.dart';
+import 'package:zapytaj/services/ApiRepository.dart';
+import 'package:zapytaj/widgets/AppBarLeadingButton.dart';
+import 'package:zapytaj/widgets/CustomTextField.dart';
+import 'package:zapytaj/widgets/QuestionListItem.dart';
 import 'package:flutter/material.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -14,13 +16,16 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
+  AuthProvider _authProvider;
   TextEditingController _searchController = TextEditingController();
   List<Question> _questions = [];
   bool _startedSearching = false;
 
   _searchQuestions(String value) async {
+    _authProvider = Provider.of<AuthProvider>(context, listen: false);
     _startedSearching = true;
-    await ApiRepository.searchQuestions(context, title: value)
+    await ApiRepository.searchQuestions(context,
+            userId: _authProvider.user.id, title: value)
         .then((questions) {
       setState(() {
         _questions = questions;
@@ -72,7 +77,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     ? ListView.builder(
                         itemCount: _questions.length,
                         shrinkWrap: true,
-                        itemBuilder: (context, i) => PostListItem(
+                        itemBuilder: (context, i) => QuestionListItem(
                           question: _questions[i],
                         ),
                       )
